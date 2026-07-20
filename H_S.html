@@ -1,0 +1,3688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f5f4f8">
+    <meta name="description" content="绘摄画面空间">
+    <title>绘 摄</title>
+
+    <style>
+        /* =========================================================
+           01. DESIGN TOKENS (雾紫清新主题)
+           ========================================================= */
+        :root {
+            --bg: #f5f4f8;
+            --bg-soft: #eeedf3;
+            --bg-elevated: #ffffff;
+            --panel: rgba(255, 255, 255, 0.74);
+            --panel-solid: #ffffff;
+            --line: rgba(64, 57, 82, 0.12);
+            --line-soft: rgba(64, 57, 82, 0.075);
+            --line-strong: rgba(64, 57, 82, 0.20);
+            --text: #282430;
+            --text-soft: #5d5769;
+            --muted: #80798d;
+            --muted-dark: #aaa4b4;
+            --accent: #7e70dd;
+            --accent-soft: rgba(126, 112, 221, 0.13);
+            --accent-line: rgba(126, 112, 221, 0.36);
+            --cool: #7da8d6;
+            --danger: #cc7f91;
+            --header-height: 82px;
+            --content-width: 1480px;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 10px;
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+            --shadow-soft: 0 22px 68px rgba(79, 68, 112, 0.11);
+            --shadow-deep: 0 38px 110px rgba(66, 54, 98, 0.17);
+            --cursor-x: 50vw;
+            --cursor-y: 40vh;
+            --scroll-progress: 0%;
+        }
+
+        /* =========================================================
+           02. RESET / BASE
+           ========================================================= */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--bg);
+            max-width: 100%;
+            overflow-x: clip;
+        }
+
+        body {
+            margin: 0;
+            min-width: 320px;
+            min-height: 100vh;
+            max-width: 100%;
+            overflow-x: clip;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 7% 3%, rgba(189, 175, 242, 0.27), transparent 30%),
+                radial-gradient(circle at 92% 15%, rgba(164, 206, 236, 0.24), transparent 28%),
+                radial-gradient(circle at 54% 68%, rgba(235, 187, 216, 0.16), transparent 31%),
+                linear-gradient(180deg, #f7f6fa 0%, #f2f1f6 48%, #f7f6fa 100%);
+            font-family:
+                Inter,
+                ui-sans-serif,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                "PingFang SC",
+                "Hiragino Sans GB",
+                "Microsoft YaHei",
+                Arial,
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        body.is-locked {
+            overflow: hidden;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button,
+        a,
+        input {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button {
+            color: inherit;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        svg {
+            display: block;
+        }
+
+        ::selection {
+            color: #ffffff;
+            background: var(--accent);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f3f2f7;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            border: 2px solid #f3f2f7;
+            border-radius: 999px;
+            background: #cbc7d5;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #aaa3ba;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .focus-ring:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
+
+        /* =========================================================
+           03. PAGE ATMOSPHERE
+           ========================================================= */
+        .page-atmosphere {
+            position: fixed;
+            inset: 0;
+            z-index: -10;
+            overflow: hidden;
+            pointer-events: none;
+            contain: paint;
+        }
+
+        .page-atmosphere::before {
+            position: absolute;
+            inset: 0;
+            content: "";
+            opacity: 0.34;
+            background-image:
+                linear-gradient(rgba(76, 67, 100, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(76, 67, 100, 0.02) 1px, transparent 1px);
+            background-size: 96px 96px;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,.55), transparent 68%);
+        }
+
+        .page-atmosphere::after {
+            position: absolute;
+            inset: 0;
+            content: "";
+            opacity: 0.023;
+            mix-blend-mode: multiply;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+        }
+
+        .ambient-light {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            will-change: transform;
+        }
+
+        .ambient-light--warm {
+            top: -260px;
+            left: -190px;
+            width: 700px;
+            height: 700px;
+            opacity: 0.58;
+            background: radial-gradient(circle, rgba(204, 183, 244, 0.62), transparent 69%);
+            animation: ambientDriftWarm 18s ease-in-out infinite alternate;
+        }
+
+        .ambient-light--cool {
+            top: 18vh;
+            right: -260px;
+            width: 680px;
+            height: 680px;
+            opacity: 0.54;
+            background: radial-gradient(circle, rgba(166, 211, 239, 0.58), transparent 70%);
+            animation: ambientDriftCool 22s ease-in-out infinite alternate;
+        }
+
+        .ambient-light--soft {
+            top: 66vh;
+            left: 36vw;
+            width: 520px;
+            height: 520px;
+            opacity: 0.44;
+            background: radial-gradient(circle, rgba(237, 190, 219, 0.52), transparent 70%);
+            animation: ambientDriftSoft 26s ease-in-out infinite alternate;
+        }
+
+        .light-streak {
+            position: absolute;
+            top: -40vh;
+            left: 42vw;
+            width: 12vw;
+            min-width: 110px;
+            height: 170vh;
+            opacity: 0.22;
+            transform: rotate(16deg);
+            filter: blur(8px);
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.7),
+                transparent
+            );
+            animation: streakFloat 14s ease-in-out infinite alternate;
+        }
+
+        .cursor-glow {
+            position: fixed;
+            left: var(--cursor-x);
+            top: var(--cursor-y);
+            z-index: -6;
+            width: 460px;
+            height: 460px;
+            border-radius: 50%;
+            opacity: 0.58;
+            transform: translate(-50%, -50%);
+            filter: blur(25px);
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(135, 121, 226, 0.10), transparent 67%);
+            mix-blend-mode: multiply;
+            transition: opacity 0.4s ease;
+        }
+
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 200;
+            width: var(--scroll-progress);
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), #b8ade8);
+            box-shadow: 0 0 16px rgba(126, 112, 221, 0.36);
+        }
+
+        @keyframes ambientDriftWarm {
+            from { transform: translate3d(-2%, -2%, 0) scale(1); }
+            to { transform: translate3d(10%, 8%, 0) scale(1.12); }
+        }
+
+        @keyframes ambientDriftCool {
+            from { transform: translate3d(3%, -5%, 0) scale(1); }
+            to { transform: translate3d(-12%, 10%, 0) scale(1.08); }
+        }
+
+        @keyframes ambientDriftSoft {
+            from { transform: translate3d(-4%, 4%, 0); }
+            to { transform: translate3d(8%, -10%, 0); }
+        }
+
+        @keyframes streakFloat {
+            from { transform: translateX(-8vw) rotate(16deg); opacity: 0.08; }
+            to { transform: translateX(10vw) rotate(16deg); opacity: 0.22; }
+        }
+
+        /* =========================================================
+           04. HEADER
+           ========================================================= */
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            width: 100%;
+            height: var(--header-height);
+            overflow: hidden;
+            transition:
+                height 0.45s var(--ease-out),
+                background 0.45s ease,
+                border-color 0.45s ease,
+                transform 0.45s var(--ease-out);
+            border-bottom: 1px solid transparent;
+        }
+
+        .site-header.is-scrolled {
+            height: 70px;
+            border-bottom-color: rgba(72, 62, 93, 0.08);
+            background: rgba(248, 247, 251, 0.78);
+            box-shadow: 0 10px 40px rgba(73, 63, 102, 0.055);
+            backdrop-filter: blur(24px) saturate(145%);
+            -webkit-backdrop-filter: blur(24px) saturate(145%);
+        }
+
+        .header-inner {
+            width: min(calc(100% - 48px), var(--content-width));
+            height: 100%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 28px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 18px;
+            min-width: max-content;
+        }
+
+        .brand-mark {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 0.42em;
+            color: var(--text);
+        }
+
+        .brand-mark em {
+            font-style: normal;
+            color: var(--accent);
+        }
+
+        .brand-rule {
+            width: 38px;
+            height: 1px;
+            background: var(--line-strong);
+        }
+
+        .brand-caption {
+            font-size: 9px;
+            line-height: 1.5;
+            letter-spacing: 0.22em;
+            color: #90899c;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            min-width: 0;
+        }
+
+        .header-link {
+            position: relative;
+            padding: 10px 2px;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            color: #716b7c;
+            transition: color 0.3s ease;
+        }
+
+        .header-link::after {
+            position: absolute;
+            left: 0;
+            bottom: 4px;
+            width: 0;
+            height: 1px;
+            content: "";
+            background: var(--accent);
+            transition: width 0.35s var(--ease-out);
+        }
+
+        .header-link:hover {
+            color: var(--text);
+        }
+
+        .header-link:hover::after {
+            width: calc(100% - 2px);
+        }
+
+        /* =========================================================
+           05. SEARCH
+           ========================================================= */
+        .search-box {
+            position: relative;
+            width: clamp(220px, 25vw, 340px);
+        }
+
+        .search-input-shell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 44px;
+            border: 1px solid rgba(74, 65, 98, 0.12);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.62);
+            box-shadow: 0 10px 30px rgba(71, 61, 104, 0.045);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            transition:
+                border-color 0.3s ease,
+                background 0.3s ease,
+                box-shadow 0.3s ease,
+                transform 0.3s var(--ease-out);
+        }
+
+        .search-input-shell:hover {
+            border-color: rgba(126, 112, 221, 0.24);
+            background: rgba(255, 255, 255, 0.84);
+        }
+
+        .search-input-shell:focus-within {
+            border-color: rgba(126, 112, 221, 0.46);
+            background: rgba(255, 255, 255, 0.97);
+            box-shadow: 0 0 0 4px rgba(126, 112, 221, 0.08), 0 18px 54px rgba(73, 62, 108, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .search-icon {
+            flex: 0 0 auto;
+            width: 17px;
+            height: 17px;
+            margin-left: 16px;
+            color: var(--muted);
+        }
+
+        #search-input {
+            width: 100%;
+            height: 42px;
+            padding: 0 84px 0 12px;
+            border: 0;
+            outline: 0;
+            color: var(--text);
+            background: transparent;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+        }
+
+        #search-input::placeholder {
+            color: #9992a5;
+        }
+
+        .search-shortcut {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            padding: 4px 7px;
+            transform: translateY(-50%);
+            border: 1px solid rgba(69, 59, 94, 0.11);
+            border-radius: 6px;
+            color: #9a93a6;
+            background: rgba(245, 243, 249, 0.78);
+            font-size: 9px;
+            line-height: 1;
+            letter-spacing: 0.08em;
+            pointer-events: none;
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            display: none;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            transform: translateY(-50%);
+            border: 0;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #756e82;
+            background: rgba(116, 105, 153, 0.09);
+        }
+
+        .search-clear.is-visible {
+            display: grid;
+            place-items: center;
+        }
+
+        .search-panel {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: min(380px, calc(100vw - 32px));
+            padding: 12px;
+            border: 1px solid rgba(72, 62, 98, 0.10);
+            border-radius: 18px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.985);
+            transform-origin: top right;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 30px 90px rgba(66, 54, 96, 0.16);
+            transition:
+                opacity 0.25s ease,
+                visibility 0.25s ease,
+                transform 0.35s var(--ease-out);
+        }
+
+        .search-panel.is-open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .search-panel-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 9px 10px 13px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .search-panel-label {
+            font-size: 10px;
+            letter-spacing: 0.16em;
+            color: var(--muted);
+        }
+
+        .search-panel-count {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+        }
+
+        .search-results {
+            display: grid;
+            gap: 6px;
+            max-height: 360px;
+            padding: 8px 0 0;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 64px;
+            padding: 5px 8px;
+            border: 0;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            background: transparent;
+            transition: background 0.25s ease, transform 0.3s var(--ease-out);
+        }
+
+        .search-result-item:hover,
+        .search-result-item:focus-visible {
+            outline: 0;
+            background: rgba(126, 112, 221, 0.075);
+            transform: translateX(2px);
+        }
+
+        .search-result-thumb {
+            position: relative;
+            width: 54px;
+            aspect-ratio: 4 / 3;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #e8e6ef;
+        }
+
+        .search-result-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .search-result-thumb::after {
+            position: absolute;
+            inset: 0;
+            content: "";
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+        }
+
+        .search-result-copy {
+            min-width: 0;
+        }
+
+        .search-result-title {
+            overflow: hidden;
+            color: var(--text-soft);
+            font-size: 11px;
+            letter-spacing: 0.07em;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .search-result-meta {
+            overflow: hidden;
+            margin-top: 7px;
+            color: var(--muted-dark);
+            font-size: 9px;
+            letter-spacing: 0.09em;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .search-result-arrow {
+            width: 15px;
+            height: 15px;
+            color: var(--muted-dark);
+        }
+
+        .search-empty {
+            padding: 38px 18px;
+            text-align: center;
+        }
+
+        .search-empty-icon {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            margin: 0 auto 15px;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+        }
+
+        .search-empty-icon::before {
+            position: absolute;
+            top: 13px;
+            left: 13px;
+            width: 14px;
+            height: 14px;
+            content: "";
+            border: 1px solid var(--muted-dark);
+            border-radius: 50%;
+        }
+
+        .search-empty-icon::after {
+            position: absolute;
+            right: 9px;
+            bottom: 11px;
+            width: 9px;
+            height: 1px;
+            content: "";
+            transform: rotate(45deg);
+            background: var(--muted-dark);
+        }
+
+        .search-empty strong {
+            display: block;
+            color: var(--text-soft);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+        }
+
+        .search-empty span {
+            display: block;
+            margin-top: 8px;
+            color: var(--muted-dark);
+            font-size: 9px;
+            line-height: 1.8;
+            letter-spacing: 0.08em;
+        }
+
+        /* =========================================================
+           06. HERO
+           ========================================================= */
+        .hero {
+            position: relative;
+            width: min(calc(100% - 48px), var(--content-width));
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: calc(var(--header-height) + 72px) 0 86px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.85fr);
+            align-items: center;
+            gap: clamp(40px, 5vw, 80px);
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 2;
+            padding-left: clamp(0px, 3vw, 46px);
+        }
+
+        .hero-eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+            color: var(--accent);
+            font-size: 10px;
+            letter-spacing: 0.24em;
+        }
+
+        .hero-eyebrow::before {
+            width: 38px;
+            height: 1px;
+            content: "";
+            background: var(--accent-line);
+        }
+
+        .hero-title {
+            margin: 0;
+            font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+            font-size: clamp(54px, 6.4vw, 96px);
+            font-weight: 400;
+            line-height: 0.96;
+            letter-spacing: -0.04em;
+            color: #2b2733;
+        }
+
+        .hero-title span {
+            display: block;
+        }
+
+        .hero-title span:last-child {
+            margin-left: clamp(20px, 4vw, 56px);
+            color: rgba(126, 112, 221, 0.11);
+            -webkit-text-stroke: 1px rgba(91, 80, 137, 0.38);
+        }
+
+        .hero-lead {
+            max-width: 570px;
+            margin: 36px 0 0;
+            color: var(--text-soft);
+            font-size: clamp(14px, 1.2vw, 17px);
+            font-weight: 300;
+            line-height: 2;
+            letter-spacing: 0.06em;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+            margin-top: 36px;
+        }
+
+        .primary-button,
+        .ghost-button {
+            min-height: 48px;
+            padding: 0 23px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border-radius: 999px;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            transition:
+                transform 0.35s var(--ease-out),
+                border-color 0.3s ease,
+                background 0.3s ease,
+                color 0.3s ease;
+        }
+
+        .primary-button {
+            border: 1px solid var(--accent);
+            color: #ffffff;
+            background: linear-gradient(135deg, #8879e7, #7164cf);
+            box-shadow: 0 14px 34px rgba(111, 95, 205, 0.22);
+        }
+
+        .primary-button:hover {
+            transform: translateY(-3px);
+            background: linear-gradient(135deg, #7668d7, #6558c2);
+            box-shadow: 0 18px 40px rgba(101, 84, 193, 0.27);
+        }
+
+        .ghost-button {
+            border: 1px solid rgba(71, 62, 93, 0.13);
+            color: #5d5769;
+            background: rgba(255, 255, 255, 0.64);
+            box-shadow: 0 10px 28px rgba(72, 62, 101, 0.05);
+        }
+
+        .ghost-button:hover {
+            transform: translateY(-3px);
+            border-color: rgba(126, 112, 221, 0.26);
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .button-arrow {
+            width: 16px;
+            height: 16px;
+        }
+
+        .hero-stats {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 48px;
+            padding-top: 20px;
+            border-top: 1px solid var(--line-soft);
+        }
+
+        .hero-stat strong {
+            display: block;
+            color: var(--text);
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .hero-stat span {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted-dark);
+            font-size: 9px;
+            letter-spacing: 0.12em;
+        }
+
+        .hero-visual {
+            position: relative;
+            min-height: 0;
+            display: grid;
+            place-items: center;
+            isolation: isolate;
+            contain: paint;
+        }
+
+        .hero-visual::before {
+            position: absolute;
+            inset: 11% 5% 8% 4%;
+            z-index: -1;
+            content: "";
+            border-radius: 48% 52% 58% 42% / 48% 45% 55% 52%;
+            background:
+                radial-gradient(circle at 26% 32%, rgba(197, 185, 244, 0.72), transparent 31%),
+                radial-gradient(circle at 72% 28%, rgba(163, 209, 238, 0.70), transparent 30%),
+                radial-gradient(circle at 56% 76%, rgba(239, 194, 220, 0.58), transparent 30%);
+            filter: blur(28px);
+            opacity: 0.72;
+        }
+
+        .featured-frame {
+            position: relative;
+            width: min(100%, 520px);
+            aspect-ratio: 4 / 5;
+            padding: clamp(14px, 2vw, 24px);
+            border: 1px solid rgba(77, 67, 100, 0.11);
+            border-radius: 28px;
+            transform: rotate(2.1deg);
+            background: rgba(255, 255, 255, 0.62);
+            box-shadow: 0 38px 100px rgba(72, 61, 105, 0.16);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: transform 0.8s var(--ease-out);
+        }
+
+        .hero-visual:hover .featured-frame {
+            transform: rotate(0.4deg) translateY(-7px);
+        }
+
+        .featured-photo {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 18px;
+            contain: paint;
+            background:
+                radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.84), transparent 12%),
+                radial-gradient(circle at 67% 30%, rgba(211, 201, 246, 0.86), transparent 25%),
+                linear-gradient(132deg, transparent 0 28%, rgba(255,255,255,.56) 28.5% 29.2%, transparent 29.8%),
+                linear-gradient(160deg, #d9d4f1 0%, #b9cbea 46%, #8e91bf 100%);
+        }
+
+        .featured-photo::before {
+            position: absolute;
+            inset: 0;
+            content: "";
+            background:
+                linear-gradient(115deg, transparent 0 50%, rgba(255, 255, 255, 0.55) 50.6%, rgba(255,255,255,.10) 65%, transparent 73%),
+                radial-gradient(ellipse at 45% 52%, rgba(255,255,255,.08), rgba(67,58,96,.25) 85%);
+        }
+
+        .featured-photo::after {
+            position: absolute;
+            inset: 0;
+            content: "";
+            opacity: 0.38;
+            box-shadow: inset 0 0 110px rgba(67, 58, 97, 0.34);
+        }
+
+        .featured-lines {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            contain: paint;
+        }
+
+        .featured-lines span {
+            position: absolute;
+            left: -20%;
+            width: 140%;
+            height: 1px;
+            transform: rotate(-24deg);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.52), transparent);
+        }
+
+        .featured-lines span:nth-child(1) { top: 26%; }
+        .featured-lines span:nth-child(2) { top: 42%; opacity: .55; }
+        .featured-lines span:nth-child(3) { top: 68%; opacity: .26; }
+
+        .featured-focus {
+            position: absolute;
+            left: 46%;
+            top: 41%;
+            width: 86px;
+            height: 86px;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(255, 255, 255, 0.58);
+        }
+
+        .featured-focus::before,
+        .featured-focus::after {
+            position: absolute;
+            content: "";
+            background: rgba(255, 255, 255, 0.58);
+        }
+
+        .featured-focus::before {
+            left: 50%;
+            top: -9px;
+            width: 1px;
+            height: calc(100% + 18px);
+        }
+
+        .featured-focus::after {
+            top: 50%;
+            left: -9px;
+            height: 1px;
+            width: calc(100% + 18px);
+        }
+
+        .featured-badge {
+            position: absolute;
+            right: -28px;
+            bottom: 36px;
+            z-index: 2;
+            width: 96px;
+            height: 96px;
+            border: 1px solid rgba(126, 112, 221, 0.30);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: rgba(255, 255, 255, 0.76);
+            box-shadow: 0 18px 46px rgba(74, 63, 104, 0.12);
+            animation: badgeRotate 20s linear infinite;
+        }
+
+        .featured-badge::before {
+            position: absolute;
+            inset: 15px;
+            content: "";
+            border: 1px solid var(--line-soft);
+            border-radius: 50%;
+        }
+
+        .featured-badge span {
+            max-width: 72px;
+            text-align: center;
+            color: #6f63c9;
+            font-size: 8px;
+            line-height: 1.8;
+            letter-spacing: 0.17em;
+        }
+
+        @keyframes badgeRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .featured-caption {
+            position: absolute;
+            left: -38px;
+            bottom: 30px;
+            z-index: 3;
+            padding: 12px 14px;
+            border-left: 1px solid var(--accent);
+            border-radius: 0 14px 14px 0;
+            background: rgba(255, 255, 255, 0.80);
+            box-shadow: 0 18px 50px rgba(71, 60, 101, 0.10);
+        }
+
+        .featured-caption strong {
+            display: block;
+            color: var(--text-soft);
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        .featured-caption span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted-dark);
+            font-size: 8px;
+            letter-spacing: .16em;
+        }
+
+        .hero-scroll {
+            position: absolute;
+            left: 0;
+            bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            color: var(--muted-dark);
+            font-size: 8px;
+            letter-spacing: 0.2em;
+            writing-mode: vertical-rl;
+        }
+
+        .hero-scroll::after {
+            width: 1px;
+            height: 56px;
+            content: "";
+            background: linear-gradient(var(--muted-dark), transparent);
+        }
+
+        /* =========================================================
+           07. WORKS SECTION
+           ========================================================= */
+        .works-section {
+            position: relative;
+            width: min(calc(100% - 48px), var(--content-width));
+            margin: 0 auto;
+            padding: 100px 0 160px;
+        }
+
+        .works-section::before {
+            position: absolute;
+            inset: 2% -8% auto;
+            z-index: -1;
+            height: 560px;
+            content: "";
+            background:
+                radial-gradient(circle at 24% 24%, rgba(193, 181, 239, 0.15), transparent 35%),
+                radial-gradient(circle at 80% 18%, rgba(157, 205, 235, 0.14), transparent 34%);
+            filter: blur(20px);
+        }
+
+        .section-heading {
+            display: grid;
+            grid-template-columns: minmax(0, 0.8fr) minmax(320px, 0.6fr);
+            align-items: end;
+            justify-content: space-between;
+            gap: 42px;
+            margin-bottom: 64px;
+        }
+
+        .section-kicker {
+            margin-bottom: 18px;
+            color: var(--accent);
+            font-size: 9px;
+            letter-spacing: 0.23em;
+        }
+
+        .section-title {
+            margin: 0;
+            font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+            font-size: clamp(42px, 5vw, 76px);
+            font-weight: 400;
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+        }
+
+        .section-copy {
+            max-width: 480px;
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 2;
+            letter-spacing: 0.06em;
+        }
+
+        .works-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 18px;
+            margin-bottom: 32px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .result-count {
+            flex: 0 0 auto;
+            color: var(--muted-dark);
+            font-size: 9px;
+            letter-spacing: 0.14em;
+        }
+
+        .result-count strong {
+            color: var(--text-soft);
+            font-weight: 500;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: clamp(14px, 1.6vw, 24px);
+            align-items: start;
+        }
+
+        .work-card {
+            position: relative;
+            grid-column: auto;
+            min-width: 0;
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(32px);
+            transition:
+                opacity 0.8s var(--ease-out),
+                transform 0.8s var(--ease-out);
+        }
+
+        .work-card.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .work-card.is-hidden {
+            display: none;
+        }
+
+        .work-card-inner {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(69, 60, 91, 0.085);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.76);
+            box-shadow: 0 18px 54px rgba(70, 60, 99, 0.075);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition:
+                transform 0.55s var(--ease-out),
+                border-color 0.35s ease,
+                background 0.35s ease,
+                box-shadow 0.55s var(--ease-out);
+        }
+
+        .work-card:hover .work-card-inner,
+        .work-card:focus-visible .work-card-inner {
+            transform: translateY(-3px);
+            border-color: rgba(126, 112, 221, 0.18);
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 30px 80px rgba(70, 58, 101, 0.14);
+        }
+
+        .work-media {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: var(--work-aspect, 1 / 1);
+            background: #e8e6ef;
+        }
+
+        .work-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            image-rendering: auto;
+        }
+
+        .work-placeholder {
+            position: absolute;
+            inset: 0;
+            background: var(--placeholder-a, #e8e6ef);
+        }
+
+        .work-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 22px;
+            opacity: 0;
+            background: linear-gradient(to top, rgba(48, 40, 70, 0.58), transparent 50%);
+            transition: opacity 0.45s ease;
+        }
+
+        .work-card:hover .work-overlay,
+        .work-card:focus-visible .work-overlay {
+            opacity: 1;
+        }
+
+        .work-overlay-icon {
+            display: grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255,255,255,.44);
+            border-radius: 50%;
+            background: rgba(255,255,255,.16);
+            transition: transform 0.45s var(--ease-out), background 0.3s ease;
+        }
+
+        .work-card:hover .work-overlay-icon {
+            transform: rotate(45deg);
+            background: rgba(126, 112, 221, 0.32);
+        }
+
+        .work-overlay-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .empty-state {
+            display: none;
+            min-height: 320px;
+            place-items: center;
+            padding: 80px 20px;
+            border: 1px solid rgba(76, 67, 99, 0.15);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.46);
+            text-align: center;
+        }
+
+        .empty-state.is-visible {
+            display: grid;
+        }
+
+        .empty-state-icon {
+            position: relative;
+            width: 74px;
+            height: 74px;
+            margin: 0 auto 22px;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+        }
+
+        .empty-state-icon::before {
+            position: absolute;
+            left: 21px;
+            top: 21px;
+            width: 22px;
+            height: 22px;
+            content: "";
+            border: 1px solid var(--muted-dark);
+            border-radius: 50%;
+        }
+
+        .empty-state-icon::after {
+            position: absolute;
+            right: 14px;
+            bottom: 18px;
+            width: 16px;
+            height: 1px;
+            content: "";
+            transform: rotate(45deg);
+            background: var(--muted-dark);
+        }
+
+        .empty-state h3 {
+            margin: 0;
+            color: var(--text-soft);
+            font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .empty-state p {
+            max-width: 440px;
+            margin: 12px auto 0;
+            color: var(--muted-dark);
+            font-size: 10px;
+            line-height: 1.9;
+            letter-spacing: 0.1em;
+        }
+
+        /* =========================================================
+           08. MEDIA MANAGER
+           ========================================================= */
+        .add-button {
+            position: fixed;
+            right: 24px;
+            bottom: 80px;
+            z-index: 60;
+            display: grid;
+            place-items: center;
+            width: 52px;
+            height: 52px;
+            border: 1px solid rgba(126, 112, 221, 0.30);
+            border-radius: 50%;
+            cursor: pointer;
+            color: #ffffff;
+            background: linear-gradient(135deg, #8879e7, #7164cf);
+            box-shadow: 0 18px 50px rgba(111, 95, 205, 0.26);
+            transition:
+                transform 0.35s var(--ease-out),
+                border-color 0.3s ease,
+                box-shadow 0.35s var(--ease-out);
+        }
+
+        .add-button:hover {
+            transform: translateY(-4px) rotate(90deg);
+            border-color: rgba(126, 112, 221, 0.52);
+            box-shadow: 0 24px 60px rgba(101, 84, 193, 0.32);
+        }
+
+        .add-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .media-manager {
+            position: fixed;
+            inset: 0;
+            z-index: 350;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            opacity: 0;
+            visibility: hidden;
+            background: rgba(245, 244, 248, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition:
+                opacity 0.4s ease,
+                visibility 0.4s ease;
+        }
+
+        .media-manager.is-open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .media-manager-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .media-manager-title {
+            margin: 0;
+            color: var(--text);
+            font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .media-manager-close {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.76);
+            transition:
+                transform 0.35s var(--ease-out),
+                border-color 0.3s ease,
+                color 0.3s ease;
+        }
+
+        .media-manager-close:hover {
+            transform: translateY(-2px);
+            border-color: rgba(126, 112, 221, 0.28);
+            color: var(--text);
+        }
+
+        .media-manager-close svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .media-manager-body {
+            overflow: auto;
+            padding: 28px 32px;
+        }
+
+        .media-section {
+            margin-bottom: 40px;
+        }
+
+        .media-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .media-section-label {
+            margin-bottom: 16px;
+            color: var(--muted);
+            font-size: 9px;
+            letter-spacing: 0.18em;
+        }
+
+        .upload-area {
+            position: relative;
+            min-height: 160px;
+            padding: 28px;
+            border: 2px dashed var(--line);
+            border-radius: 18px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.58);
+            transition:
+                border-color 0.3s ease,
+                background 0.3s ease,
+                transform 0.35s var(--ease-out);
+        }
+
+        .upload-area:hover,
+        .upload-area.is-dragover {
+            border-color: rgba(126, 112, 221, 0.38);
+            background: rgba(126, 112, 221, 0.04);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.is-dragover {
+            border-color: rgba(126, 112, 221, 0.56);
+            box-shadow: 0 0 0 4px rgba(126, 112, 221, 0.08);
+        }
+
+        .upload-icon {
+            width: 44px;
+            height: 44px;
+            margin: 0 auto 14px;
+            color: var(--accent);
+        }
+
+        .upload-area h3 {
+            margin: 0 0 8px;
+            color: var(--text-soft);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+        }
+
+        .upload-area p {
+            margin: 0;
+            color: var(--muted-dark);
+            font-size: 9px;
+            line-height: 1.8;
+            letter-spacing: 0.08em;
+        }
+
+        #file-input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 14px;
+        }
+
+        .photo-item {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #e8e6ef;
+            transition:
+                border-color 0.3s ease,
+                transform 0.35s var(--ease-out);
+        }
+
+        .photo-item:hover {
+            border-color: rgba(126, 112, 221, 0.28);
+            transform: translateY(-3px);
+        }
+
+        .photo-item.is-selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(126, 112, 221, 0.12);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-item-placeholder {
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 70% 25%, rgba(255,255,255,.52), transparent 18%),
+                linear-gradient(135deg, #d7d1ee, #bdcce9 60%, #9994c5);
+        }
+
+        .photo-item-info {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 8px;
+            opacity: 0;
+            background: linear-gradient(to top, rgba(48, 40, 70, 0.72), transparent);
+            transition: opacity 0.3s ease;
+        }
+
+        .photo-item:hover .photo-item-info {
+            opacity: 1;
+        }
+
+        .photo-item-name {
+            overflow: hidden;
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 7px;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .media-manager-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 14px;
+            padding: 20px 32px;
+            border-top: 1px solid var(--line-soft);
+            background: rgba(255, 255, 255, 0.68);
+        }
+
+        .media-manager-cancel {
+            min-height: 44px;
+            padding: 0 20px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            cursor: pointer;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.76);
+            font-size: 9px;
+            letter-spacing: 0.16em;
+            transition:
+                transform 0.35s var(--ease-out),
+                border-color 0.3s ease,
+                color 0.3s ease;
+        }
+
+        .media-manager-cancel:hover {
+            transform: translateY(-2px);
+            border-color: rgba(126, 112, 221, 0.26);
+            color: var(--text-soft);
+        }
+
+        .media-manager-confirm {
+            min-height: 44px;
+            padding: 0 26px;
+            border: 1px solid var(--accent);
+            border-radius: 999px;
+            cursor: pointer;
+            color: #ffffff;
+            background: linear-gradient(135deg, #8879e7, #7164cf);
+            font-size: 9px;
+            letter-spacing: 0.16em;
+            box-shadow: 0 12px 32px rgba(111, 95, 205, 0.20);
+            transition:
+                transform 0.35s var(--ease-out),
+                box-shadow 0.35s var(--ease-out);
+        }
+
+        .media-manager-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 38px rgba(101, 84, 193, 0.26);
+        }
+
+        .media-manager-confirm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* =========================================================
+           08. FOOTER
+           ========================================================= */
+        .site-footer {
+            width: min(calc(100% - 48px), var(--content-width));
+            margin: 0 auto;
+            padding: 34px 0 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            border-top: 1px solid rgba(72, 63, 94, 0.09);
+            color: var(--muted-dark);
+            font-size: 8px;
+            line-height: 1.7;
+            letter-spacing: 0.15em;
+        }
+
+        .footer-quote {
+            color: var(--muted);
+        }
+
+        /* =========================================================
+           09. LIGHTBOX
+           ========================================================= */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            opacity: 0;
+            visibility: hidden;
+            background: rgba(237, 235, 243, 0.985);
+            transition:
+                opacity 0.45s ease,
+                visibility 0.45s ease;
+        }
+
+        .lightbox.is-open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lightbox-stage {
+            position: relative;
+            min-width: 0;
+            min-height: 0;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 40%, rgba(255,255,255,.92), transparent 34%),
+                linear-gradient(145deg, #eceaf2, #dad7e4);
+        }
+
+        .lightbox-stage::before {
+            position: absolute;
+            inset: 0;
+            content: "";
+            opacity: 0.32;
+            background:
+                radial-gradient(circle at 50% 42%, rgba(255,255,255,.68), transparent 38%),
+                linear-gradient(rgba(71,62,96,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(71,62,96,.025) 1px, transparent 1px);
+            background-size: auto, 90px 90px, 90px 90px;
+        }
+
+        .lightbox-toolbar {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .lightbox-close,
+        .lightbox-nav {
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid rgba(68, 59, 91, 0.12);
+            cursor: pointer;
+            color: #5f586a;
+            background: rgba(255,255,255,.74);
+            box-shadow: 0 12px 34px rgba(67, 57, 95, 0.09);
+            pointer-events: auto;
+            transition:
+                transform 0.35s var(--ease-out),
+                border-color 0.3s ease,
+                background 0.3s ease;
+        }
+
+        .lightbox-close {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+        }
+
+        .lightbox-close:hover,
+        .lightbox-nav:hover {
+            transform: translateY(-2px);
+            border-color: rgba(126,112,221,.30);
+            color: var(--accent);
+            background: rgba(255,255,255,.94);
+        }
+
+        .lightbox-close svg,
+        .lightbox-nav svg {
+            width: 17px;
+            height: 17px;
+        }
+
+        .lightbox-position {
+            color: var(--muted);
+            font-size: 9px;
+            letter-spacing: 0.16em;
+        }
+
+        .lightbox-media-wrap {
+            position: relative;
+            z-index: 2;
+            width: min(86%, 1120px);
+            max-width: min(100%, calc(82vh * var(--lightbox-aspect, 1.5)));
+            max-height: 82vh;
+            aspect-ratio: var(--lightbox-aspect, 3 / 2);
+            display: grid;
+            place-items: center;
+            transition: transform 0.6s var(--ease-out), opacity .35s ease;
+        }
+
+        .lightbox-image {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 82vh;
+            object-fit: contain;
+            image-rendering: auto;
+            box-shadow: var(--shadow-deep);
+        }
+
+        .lightbox-placeholder {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: min(72vw, 920px);
+            aspect-ratio: var(--lightbox-aspect, 16 / 10);
+            overflow: hidden;
+            border: 1px solid rgba(68, 59, 90, 0.11);
+            border-radius: 22px;
+            background:
+                radial-gradient(circle at 67% 28%, rgba(255,255,255,.66), transparent 16%),
+                linear-gradient(137deg, #d7d2ee, #bdcce9 56%, #9692c2);
+            box-shadow: 0 34px 90px rgba(66, 55, 96, 0.18);
+        }
+
+        .lightbox-nav-wrap {
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            bottom: 24px;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .lightbox-nav {
+            width: 48px;
+            height: 42px;
+            border-radius: 999px;
+        }
+
+        .lightbox-sidebar {
+            position: relative;
+            min-height: 0;
+            padding: 34px 28px;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid rgba(68, 59, 92, 0.09);
+            background: rgba(255,255,255,.88);
+            box-shadow: -18px 0 54px rgba(65, 55, 94, 0.07);
+        }
+
+        .lightbox-sidebar-label {
+            color: var(--accent);
+            font-size: 8px;
+            letter-spacing: 0.2em;
+        }
+
+        .lightbox-title {
+            margin: 20px 0 0;
+            color: var(--text);
+            font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+            font-size: 34px;
+            font-weight: 400;
+            line-height: 1.25;
+        }
+
+        .lightbox-model {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 10px;
+            letter-spacing: .12em;
+        }
+
+        .lightbox-description {
+            margin: 30px 0 0;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 2;
+            letter-spacing: .045em;
+        }
+
+        .lightbox-meta {
+            display: grid;
+            gap: 13px;
+            margin-top: 34px;
+            padding-top: 24px;
+            border-top: 1px solid var(--line-soft);
+        }
+
+        .lightbox-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .lightbox-meta-row span:first-child {
+            color: var(--muted-dark);
+            font-size: 8px;
+            letter-spacing: .14em;
+        }
+
+        .lightbox-meta-row span:last-child {
+            overflow: hidden;
+            color: var(--text-soft);
+            font-size: 9px;
+            letter-spacing: .08em;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .collection-list {
+            margin-top: auto;
+            padding-top: 28px;
+        }
+
+        .collection-list-label {
+            margin-bottom: 13px;
+            color: var(--muted-dark);
+            font-size: 8px;
+            letter-spacing: .17em;
+        }
+
+        .collection-thumbs {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .collection-thumb {
+            position: relative;
+            aspect-ratio: 1;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid rgba(68, 59, 91, 0.10);
+            cursor: pointer;
+            opacity: .5;
+            background: #e8e6ef;
+            transition: opacity .3s ease, border-color .3s ease, transform .3s var(--ease-out);
+        }
+
+        .collection-thumb:hover {
+            opacity: .9;
+            transform: translateY(-2px);
+        }
+
+        .collection-thumb.is-active {
+            opacity: 1;
+            border-color: var(--accent);
+        }
+
+        .collection-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .collection-thumb-placeholder {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background:
+                radial-gradient(circle at 70% 25%, rgba(255,255,255,.52), transparent 18%),
+                linear-gradient(135deg, #d7d1ee, #bdcce9 60%, #9994c5);
+        }
+
+        /* =========================================================
+           10. BACK TO TOP / TOAST
+           ========================================================= */
+        .back-top {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 70;
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(68, 59, 91, 0.11);
+            border-radius: 50%;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(12px);
+            cursor: pointer;
+            color: #716a7d;
+            background: rgba(255,255,255,.76);
+            box-shadow: 0 15px 40px rgba(68, 58, 98, 0.09);
+            transition:
+                opacity .3s ease,
+                visibility .3s ease,
+                transform .4s var(--ease-out),
+                color .3s ease,
+                border-color .3s ease;
+        }
+
+        .back-top.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-top:hover {
+            color: var(--accent);
+            border-color: var(--accent-line);
+        }
+
+        .back-top svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            z-index: 400;
+            min-width: 220px;
+            max-width: min(90vw, 420px);
+            padding: 13px 18px;
+            border: 1px solid rgba(69, 60, 92, 0.11);
+            border-radius: 999px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, 18px);
+            color: #5f586a;
+            text-align: center;
+            background: rgba(255,255,255,.94);
+            backdrop-filter: blur(16px);
+            font-size: 10px;
+            letter-spacing: .08em;
+            box-shadow: 0 18px 54px rgba(67, 56, 97, 0.13);
+            transition:
+                opacity .3s ease,
+                visibility .3s ease,
+                transform .4s var(--ease-out);
+        }
+
+        .toast.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, 0);
+        }
+
+        /* =========================================================
+           11. RESPONSIVE — 平板 (≤1180px)
+           ========================================================= */
+        @media (max-width: 1180px) {
+            .hero {
+                grid-template-columns: minmax(0, 0.95fr) minmax(400px, 1.05fr);
+                gap: 48px;
+            }
+
+            .hero-title {
+                font-size: clamp(62px, 8vw, 112px);
+            }
+
+            .featured-badge {
+                right: -12px;
+                width: 110px;
+                height: 110px;
+            }
+
+            .featured-caption {
+                left: -24px;
+            }
+
+            .brand-caption,
+            .brand-rule,
+            .header-link {
+                display: none;
+            }
+
+            .search-box {
+                width: clamp(200px, 22vw, 260px);
+            }
+
+            .search-shortcut {
+                display: none;
+            }
+        }
+
+        /* =========================================================
+           12. RESPONSIVE — 小平板 (≤980px)
+           ========================================================= */
+        @media (max-width: 980px) {
+            :root {
+                --header-height: 74px;
+            }
+
+            .hero {
+                min-height: auto;
+                padding-top: 136px;
+                grid-template-columns: 1fr;
+                gap: 64px;
+            }
+
+            .hero-copy {
+                max-width: 760px;
+                padding-left: 0;
+            }
+
+            .hero-title {
+                font-size: clamp(74px, 14vw, 132px);
+            }
+
+            .hero-title span:last-child {
+                margin-left: clamp(40px, 16vw, 150px);
+            }
+
+            .hero-visual {
+                min-height: 0;
+            }
+
+            .featured-frame {
+                width: min(70vw, 540px);
+                padding: 12px;
+            }
+
+            .hero-scroll {
+                display: none;
+            }
+
+            .works-section {
+                padding-top: 130px;
+            }
+
+            .section-heading {
+                grid-template-columns: 1fr;
+                align-items: start;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .work-card,
+            .work-card:nth-child(n) {
+                grid-column: auto;
+            }
+
+            .work-card:nth-child(4n + 1) .work-media,
+            .work-card:nth-child(4n + 4) .work-media {
+                aspect-ratio: 4 / 5;
+            }
+
+            .work-card:nth-child(4n + 2) .work-media,
+            .work-card:nth-child(4n + 3) .work-media {
+                aspect-ratio: 4 / 3;
+            }
+
+            .lightbox {
+                grid-template-columns: 1fr;
+            }
+
+            .lightbox-sidebar {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                min-height: auto;
+                max-height: 40vh;
+                padding: 22px 24px 24px;
+                border-top: 1px solid var(--line-soft);
+                border-left: 0;
+                overflow-y: auto;
+                transform: translateY(calc(100% - 92px));
+                transition: transform .45s var(--ease-out);
+            }
+
+            .lightbox-sidebar:hover,
+            .lightbox-sidebar:focus-within {
+                transform: translateY(0);
+            }
+
+            .lightbox-title {
+                margin-top: 12px;
+                font-size: 26px;
+            }
+
+            .lightbox-description,
+            .lightbox-meta,
+            .collection-list {
+                margin-top: 18px;
+            }
+
+            .lightbox-media-wrap {
+                width: 92%;
+                padding-bottom: 74px;
+            }
+        }
+
+        /* =========================================================
+           13. RESPONSIVE — 手机 (≤720px)
+           ========================================================= */
+        @media (max-width: 720px) {
+            :root {
+                --header-height: 68px;
+            }
+
+            .header-inner,
+            .hero,
+            .works-section,
+            .site-footer {
+                width: min(calc(100% - 28px), var(--content-width));
+            }
+
+            .header-inner {
+                gap: 14px;
+            }
+
+            .brand-mark {
+                font-size: 19px;
+                letter-spacing: .32em;
+            }
+
+            .featured-frame {
+                border-radius: 20px;
+            }
+
+            .featured-photo {
+                border-radius: 13px;
+            }
+
+            .search-box {
+                width: 44px;
+                transition: width 0.32s var(--ease-out);
+            }
+
+            .search-box.is-active {
+                width: min(64vw, 260px);
+            }
+
+            .search-input-shell {
+                min-height: 40px;
+            }
+
+            #search-input {
+                width: 0;
+                height: 38px;
+                padding: 0;
+                font-size: 11px;
+                opacity: 0;
+                transition: width 0.32s var(--ease-out), padding 0.32s var(--ease-out), opacity 0.25s ease;
+            }
+
+            .search-box.is-active #search-input {
+                width: 100%;
+                padding: 0 40px 0 12px;
+                opacity: 1;
+            }
+
+            .search-icon {
+                width: 15px;
+                height: 15px;
+                margin-left: 13px;
+            }
+
+            .search-panel {
+                background: rgba(255, 255, 255, 0.985);
+            }
+
+            .hero {
+                padding-top: 122px;
+                padding-bottom: 50px;
+                gap: 48px;
+            }
+
+            .hero-eyebrow {
+                margin-bottom: 22px;
+                font-size: 8px;
+            }
+
+            .hero-title {
+                font-size: clamp(62px, 20vw, 96px);
+            }
+
+            .hero-title span:last-child {
+                margin-left: 12vw;
+            }
+
+            .hero-lead {
+                margin-top: 28px;
+                font-size: 13px;
+                line-height: 1.9;
+            }
+
+            .hero-actions {
+                margin-top: 28px;
+            }
+
+            .primary-button,
+            .ghost-button {
+                min-height: 44px;
+                padding: 0 18px;
+                font-size: 9px;
+            }
+
+            .hero-stats {
+                margin-top: 38px;
+            }
+
+            .hero-stat strong {
+                font-size: 18px;
+            }
+
+            .hero-stat span {
+                font-size: 7px;
+            }
+
+            .featured-frame {
+                width: min(78vw, 380px);
+                padding: 10px;
+            }
+
+            .featured-caption {
+                left: -4px;
+                bottom: 22px;
+                padding: 12px 14px;
+            }
+
+            .featured-caption strong {
+                font-size: 14px;
+            }
+
+            .featured-badge {
+                right: -4px;
+                bottom: -24px;
+                width: 72px;
+                height: 72px;
+            }
+
+            .featured-badge span {
+                max-width: 44px;
+                font-size: 5.5px;
+            }
+
+            .featured-lines span {
+                left: -8%;
+                width: 116%;
+            }
+
+            .works-section {
+                padding: 122px 0 110px;
+            }
+
+            .section-heading {
+                gap: 24px;
+                margin-bottom: 38px;
+            }
+
+            .section-title {
+                font-size: 44px;
+            }
+
+            .section-copy {
+                font-size: 11px;
+            }
+
+            .works-toolbar {
+                align-items: flex-start;
+                flex-direction: column;
+                margin-bottom: 22px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .work-card-inner {
+                border-radius: 18px;
+            }
+
+            .work-overlay {
+                opacity: 1;
+                padding: 16px;
+                background: linear-gradient(to top, rgba(48, 40, 70, 0.48), transparent 38%);
+            }
+
+            .work-overlay-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .site-footer {
+                align-items: flex-start;
+                flex-direction: column;
+                padding-bottom: 30px;
+            }
+
+            .cursor-glow {
+                display: none;
+            }
+
+            .ambient-light,
+            .light-streak {
+                max-width: 130vw;
+            }
+
+            .back-top {
+                right: 14px;
+                bottom: 14px;
+            }
+
+            .lightbox-toolbar {
+                top: 14px;
+                left: 14px;
+                right: 14px;
+            }
+
+            .lightbox-close {
+                width: 42px;
+                height: 42px;
+            }
+
+            .lightbox-media-wrap {
+                width: calc(100% - 28px);
+                max-height: 72vh;
+            }
+
+            .lightbox-image {
+                max-height: 70vh;
+            }
+
+            .lightbox-placeholder {
+                width: 100%;
+                height: 100%;
+                aspect-ratio: var(--lightbox-aspect, 3 / 4);
+            }
+        }
+
+        /* =========================================================
+           14. RESPONSIVE — 小手机 (≤480px)
+           ========================================================= */
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: clamp(42px, 16vw, 62px);
+            }
+
+            .hero-title span:last-child {
+                margin-left: 8vw;
+            }
+
+            .hero-lead {
+                font-size: 12px;
+            }
+
+            .featured-frame {
+                width: min(88vw, 320px);
+            }
+
+            .section-title {
+                font-size: 36px;
+            }
+
+            .lightbox-sidebar {
+                padding: 18px 16px 20px;
+            }
+
+            .lightbox-title {
+                font-size: 22px;
+            }
+        }
+
+        /* =========================================================
+           15. ACCESSIBILITY — 减少动画
+           ========================================================= */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+
+    <div class="page-atmosphere" aria-hidden="true">
+        <div class="ambient-light ambient-light--warm"></div>
+        <div class="ambient-light ambient-light--cool"></div>
+        <div class="ambient-light ambient-light--soft"></div>
+        <div class="light-streak"></div>
+    </div>
+
+    <div class="cursor-glow" aria-hidden="true"></div>
+
+    <!-- =========================================================
+         HEADER
+         ========================================================= -->
+    <header class="site-header" id="site-header">
+        <div class="header-inner">
+            <a href="#top" class="brand focus-ring" aria-label="绘 摄">
+                <span class="brand-mark">绘<em>摄</em></span>
+                <span class="brand-rule" aria-hidden="true"></span>
+                <span class="brand-caption">画面空间</span>
+            </a>
+
+            <div class="header-actions">
+                <a href="#works" class="header-link focus-ring">作品</a>
+
+                <div class="search-box" id="search-box">
+                    <div class="search-input-shell">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <circle cx="11" cy="11" r="6.5"></circle>
+                            <path d="m16 16 4.2 4.2"></path>
+                        </svg>
+
+                        <label class="sr-only" for="search-input">检索</label>
+                        <input
+                            id="search-input"
+                            type="search"
+                            autocomplete="off"
+                            spellcheck="false"
+                            placeholder="检索"
+                        >
+
+                        <span class="search-shortcut" id="search-shortcut">快捷</span>
+                        <button class="search-clear focus-ring" id="search-clear" type="button" aria-label="清空">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                <path d="M7 7l10 10M17 7 7 17"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="search-panel" id="search-panel" aria-live="polite">
+                        <div class="search-panel-top">
+                            <span class="search-panel-label">检索</span>
+                            <span class="search-panel-count" id="search-panel-count">全部</span>
+                        </div>
+                        <div class="search-results" id="search-results"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+    <main>
+        <section class="hero" id="top">
+            <div class="hero-copy">
+                <div class="hero-eyebrow reveal-item">绘 摄</div>
+
+                <h1 class="hero-title reveal-item">
+                    <span>绘</span>
+                    <span>摄</span>
+                </h1>
+
+                <p class="hero-lead reveal-item">
+                    凝光歇影，静水深流。留存每一格不被定义的瞬息。
+                </p>
+
+                <div class="hero-actions reveal-item">
+                    <a class="primary-button focus-ring" href="#works">
+                        作品
+                        <svg class="button-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path d="M5 12h14M14 7l5 5-5 5"></path>
+                        </svg>
+                    </a>
+
+                    <button class="ghost-button focus-ring" id="hero-search-button" type="button">
+                        检索
+                        <svg class="button-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <circle cx="11" cy="11" r="6.5"></circle>
+                            <path d="m16 16 4.2 4.2"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="hero-stats reveal-item" aria-label="年份">
+                    <div class="hero-stat">
+                        <strong>2026</strong>
+                        <span>年份</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-visual reveal-item" aria-hidden="true">
+                <div class="featured-frame">
+                    <div class="featured-photo">
+                        <div class="featured-lines">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="featured-focus"></div>
+                    </div>
+                </div>
+
+                <div class="featured-caption">
+                    <strong>光影</strong>
+                    <span>凝光 · 静水</span>
+                </div>
+
+                <div class="featured-badge">
+                    <span>绘摄<br>画面<br>空间</span>
+                </div>
+            </div>
+
+            <div class="hero-scroll" aria-hidden="true">向下</div>
+        </section>
+
+        <!-- =====================================================
+             WORKS
+             ===================================================== -->
+        <section class="works-section" id="works">
+            <div class="section-heading reveal-on-scroll">
+                <div>
+                    <div class="section-kicker">作品</div>
+                    <h2 class="section-title">作品</h2>
+                </div>
+
+                <p class="section-copy">
+                    静水深流。
+                </p>
+            </div>
+
+            <div class="works-toolbar reveal-on-scroll">
+                <div class="result-count"><strong id="result-count">0</strong> 件</div>
+            </div>
+
+            <div class="gallery-grid" id="gallery-grid"></div>
+
+            <div class="empty-state" id="empty-state">
+                <div>
+                    <div class="empty-state-icon" aria-hidden="true"></div>
+                    <h3>无</h3>
+                    <p>换关键词。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
+    <footer class="site-footer">
+        <span class="footer-quote">「 凝光歇影，静水深流。留存每一格不被定义的瞬息。 」</span>
+        <span>&copy; 2026 绘摄画面空间 &middot; 保留所有权利</span>
+    </footer>
+
+    <button class="add-button focus-ring" id="add-button" type="button" aria-label="添加作品">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"></path>
+        </svg>
+    </button>
+
+    <!-- =========================================================
+         MEDIA MANAGER
+         ========================================================= -->
+    <div class="media-manager" id="media-manager" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="media-manager-header">
+            <h2 class="media-manager-title">添加作品</h2>
+            <button class="media-manager-close focus-ring" id="media-manager-close" type="button" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6 6 18"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="media-manager-body">
+            <div class="media-section">
+                <div class="media-section-label">上传图片</div>
+                <div class="upload-area" id="upload-area">
+                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M12 15v-6m0 0l-3 3m3-3l3 3"></path>
+                        <rect x="3" y="19" width="18" height="5" rx="2"></rect>
+                    </svg>
+                    <h3>拖放图片到此处</h3>
+                    <p>或点击选择文件</p>
+                    <input id="file-input" type="file" accept="image/*" multiple>
+                </div>
+            </div>
+
+            <div class="media-section">
+                <div class="media-section-label">photos 文件夹</div>
+                <div class="photos-grid" id="photos-grid"></div>
+            </div>
+        </div>
+
+        <div class="media-manager-footer">
+            <button class="media-manager-cancel focus-ring" id="media-manager-cancel" type="button">取消</button>
+            <button class="media-manager-confirm focus-ring" id="media-manager-confirm" type="button" disabled>确认添加</button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         LIGHTBOX
+         ========================================================= -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="lightbox-stage" id="lightbox-stage">
+            <div class="lightbox-toolbar">
+                <button class="lightbox-close focus-ring" id="lightbox-close" type="button" aria-label="关闭">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6 6 18"></path>
+                    </svg>
+                </button>
+                <span class="lightbox-position" id="lightbox-position">01 / 06</span>
+            </div>
+
+            <div class="lightbox-media-wrap" id="lightbox-media-wrap">
+                <img class="lightbox-image" id="lightbox-image" src="" alt="" hidden>
+                <div class="lightbox-placeholder" id="lightbox-placeholder"></div>
+            </div>
+
+            <div class="lightbox-nav-wrap">
+                <button class="lightbox-nav focus-ring" id="lightbox-prev" type="button" aria-label="上一">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M15 6l-6 6 6 6"></path>
+                    </svg>
+                </button>
+                <button class="lightbox-nav focus-ring" id="lightbox-next" type="button" aria-label="下一">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M9 6l6 6-6 6"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <aside class="lightbox-sidebar">
+            <span class="lightbox-sidebar-label" id="lightbox-collection">系列</span>
+            <h2 class="lightbox-title" id="lightbox-title">未命名</h2>
+            <div class="lightbox-model" id="lightbox-model">—</div>
+            <p class="lightbox-description" id="lightbox-description">
+                —
+            </p>
+
+            <div class="lightbox-meta">
+                <div class="lightbox-meta-row">
+                    <span>系列</span>
+                    <span id="lightbox-meta-series">—</span>
+                </div>
+                <div class="lightbox-meta-row">
+                    <span>模特</span>
+                    <span id="lightbox-meta-model">—</span>
+                </div>
+                <div class="lightbox-meta-row">
+                    <span>序号</span>
+                    <span id="lightbox-meta-index">01</span>
+                </div>
+            </div>
+
+            <div class="collection-list" id="collection-list">
+                <div class="collection-list-label">同系列</div>
+                <div class="collection-thumbs" id="collection-thumbs"></div>
+            </div>
+        </aside>
+    </div>
+
+    <button class="back-top focus-ring" id="back-top" type="button" aria-label="顶部">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M6 14l6-6 6 6"></path>
+        </svg>
+    </button>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        "use strict";
+
+        /* =========================================================
+           01. 作品配置中心
+
+           使用方法：
+           1. 把图片放入 photos/ 文件夹，网站会自动加载显示
+           2. 也可以通过网页界面手动添加图片（拖放或选择文件）
+           3. 画幅以真实图片为准：上传后程序会读取每张图片的
+              naturalWidth / naturalHeight，自动写入 --work-aspect，
+              无需手动指定（aspectRatio 仅作为图片尚未加载时的占位）
+           4. title / model / collectionName / searchTerms / description
+              可后续在 GALLERY_CONFIG 中按需填写（默认都留空）
+           5. 同一个 collectionId 的作品，会在大图预览中归为同一系列
+           ========================================================= */
+        const GALLERY_CONFIG = [];
+
+        /* =========================================================
+           02. DOM 引用与基础状态
+           ========================================================= */
+        const body = document.body;
+        const root = document.documentElement;
+        const siteHeader = document.getElementById("site-header");
+        const galleryGrid = document.getElementById("gallery-grid");
+        const resultCount = document.getElementById("result-count");
+        const emptyState = document.getElementById("empty-state");
+        const searchBox = document.getElementById("search-box");
+        const searchInput = document.getElementById("search-input");
+        const searchClear = document.getElementById("search-clear");
+        const searchShortcut = document.getElementById("search-shortcut");
+        const searchPanel = document.getElementById("search-panel");
+        const searchPanelCount = document.getElementById("search-panel-count");
+        const searchResults = document.getElementById("search-results");
+        const heroSearchButton = document.getElementById("hero-search-button");
+        const backTop = document.getElementById("back-top");
+        const toast = document.getElementById("toast");
+
+        const lightbox = document.getElementById("lightbox");
+        const lightboxClose = document.getElementById("lightbox-close");
+        const lightboxPrev = document.getElementById("lightbox-prev");
+        const lightboxNext = document.getElementById("lightbox-next");
+        const lightboxPosition = document.getElementById("lightbox-position");
+        const lightboxMediaWrap = document.getElementById("lightbox-media-wrap");
+        const lightboxImage = document.getElementById("lightbox-image");
+        const lightboxPlaceholder = document.getElementById("lightbox-placeholder");
+        const lightboxCollection = document.getElementById("lightbox-collection");
+        const lightboxTitle = document.getElementById("lightbox-title");
+        const lightboxModel = document.getElementById("lightbox-model");
+        const lightboxDescription = document.getElementById("lightbox-description");
+        const lightboxMetaSeries = document.getElementById("lightbox-meta-series");
+        const lightboxMetaModel = document.getElementById("lightbox-meta-model");
+        const lightboxMetaIndex = document.getElementById("lightbox-meta-index");
+        const collectionList = document.getElementById("collection-list");
+        const collectionThumbs = document.getElementById("collection-thumbs");
+
+        const addButton = document.getElementById("add-button");
+        const mediaManager = document.getElementById("media-manager");
+        const mediaManagerClose = document.getElementById("media-manager-close");
+        const mediaManagerCancel = document.getElementById("media-manager-cancel");
+        const mediaManagerConfirm = document.getElementById("media-manager-confirm");
+        const uploadArea = document.getElementById("upload-area");
+        const fileInput = document.getElementById("file-input");
+        const photosGrid = document.getElementById("photos-grid");
+
+        const state = {
+            query: "",
+            visibleItems: [...GALLERY_CONFIG],
+            currentIndex: 0,
+            lastFocusedElement: null,
+            toastTimer: null,
+            selectedPhotos: []
+        };
+
+        const collectionMap = GALLERY_CONFIG.reduce((map, item) => {
+            const key = item.collectionId || item.id;
+            if (!map[key]) {
+                map[key] = [];
+            }
+            map[key].push(item);
+            return map;
+        }, {});
+
+        /* =========================================================
+           03. 工具函数
+           ========================================================= */
+        function escapeHTML(value) {
+            return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        function normalize(value) {
+            return String(value ?? "").trim().toLowerCase();
+        }
+
+        function padNumber(number) {
+            return String(number).padStart(2, "0");
+        }
+
+        function getItemIndex(item) {
+            return GALLERY_CONFIG.findIndex(entry => entry.id === item.id);
+        }
+
+        function getSearchText(item) {
+            return normalize([
+                item.title,
+                item.model,
+                item.collectionName,
+                item.searchTerms,
+                item.description
+            ].filter(Boolean).join(" "));
+        }
+
+        function getPaletteStyle(item) {
+            const palette = item.palette || {};
+            return [
+                `--placeholder-a:${palette.a || "#2b3035"}`,
+                `--placeholder-b:${palette.b || "#151517"}`,
+                `--placeholder-c:${palette.c || "#09090a"}`,
+                `--light-color:${palette.light || "rgba(255,226,175,.26)"}`,
+                `--light-x:${palette.x || "72%"}`,
+                `--light-y:${palette.y || "28%"}`,
+                `--placeholder-angle:${palette.angle || "135deg"}`,
+                `--beam-angle:${palette.beam || "-18deg"}`
+            ].join(";");
+        }
+
+        function createPlaceholderMarkup(item) {
+            return `
+                <div class="work-placeholder" style="${getPaletteStyle(item)}"></div>
+            `;
+        }
+
+        /* =========================================================
+           04. 动态画幅检测（以真实图片为准）
+           ========================================================= */
+        const aspectCache = new Map();
+
+        function detectImageAspect(src) {
+            if (!src) return Promise.resolve(null);
+            if (aspectCache.has(src)) return Promise.resolve(aspectCache.get(src));
+
+            return new Promise(resolve => {
+                const probe = new Image();
+                probe.onload = () => {
+                    const ratio = `${probe.naturalWidth || 1} / ${probe.naturalHeight || 1}`;
+                    aspectCache.set(src, ratio);
+                    resolve(ratio);
+                };
+                probe.onerror = () => resolve(null);
+                probe.src = src;
+            });
+        }
+
+        function applyAspectRatio(card, ratio) {
+            if (!card || !ratio) return;
+            card.style.setProperty("--work-aspect", ratio);
+        }
+
+        function createSearchThumb(item) {
+            if (item.src) {
+                return `<img src="${escapeHTML(item.src)}" alt="" loading="lazy">`;
+            }
+            return `<div class="collection-thumb-placeholder" style="${getPaletteStyle(item)}"></div>`;
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add("is-visible");
+            window.clearTimeout(state.toastTimer);
+            state.toastTimer = window.setTimeout(() => {
+                toast.classList.remove("is-visible");
+            }, 1800);
+        }
+
+        /* =========================================================
+           05. 作品卡片
+           ========================================================= */
+        function createWorkCard(item, index) {
+            const title = item.title || `作品 ${padNumber(index + 1)}`;
+            const aspectRatio = item.aspectRatio || "1/1";
+
+            const media = item.src
+                ? `<img class="work-image" src="${escapeHTML(item.src)}" alt="${escapeHTML(title)}" loading="lazy">`
+                : createPlaceholderMarkup(item);
+
+            return `
+                <article
+                    class="work-card focus-ring"
+                    data-id="${escapeHTML(item.id)}"
+                    style="--work-aspect: ${escapeHTML(aspectRatio)};"
+                    tabindex="0"
+                    role="button"
+                    aria-label="${escapeHTML(title)}"
+                >
+                    <div class="work-card-inner">
+                        <div class="work-media">
+                            ${media}
+                            <div class="work-overlay">
+                                <span class="work-overlay-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M3 21v-4M3 17l6-6 4 4 8-8M14 7h7v7"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderGallery() {
+            galleryGrid.innerHTML = GALLERY_CONFIG.map(createWorkCard).join("");
+
+            galleryGrid.querySelectorAll(".work-card").forEach(card => {
+                const openCard = () => {
+                    const item = GALLERY_CONFIG.find(entry => entry.id === card.dataset.id);
+                    if (item) {
+                        openLightbox(item);
+                    }
+                };
+
+                card.addEventListener("click", openCard);
+                card.addEventListener("keydown", event => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openCard();
+                    }
+                });
+            });
+
+            requestAnimationFrame(() => {
+                observeWorkCards();
+                applyFilters();
+                detectGalleryAspects();
+            });
+        }
+
+        function detectGalleryAspects() {
+            GALLERY_CONFIG.forEach(item => {
+                if (!item.src) return;
+                const card = galleryGrid.querySelector(`[data-id="${CSS.escape(item.id)}"]`);
+                if (!card) return;
+
+                detectImageAspect(item.src).then(ratio => {
+                    if (ratio) applyAspectRatio(card, ratio);
+                });
+            });
+        }
+
+        function applyFilters() {
+            const query = normalize(state.query);
+            const cards = [...galleryGrid.querySelectorAll(".work-card")];
+            let visibleCount = 0;
+
+            state.visibleItems = GALLERY_CONFIG.filter(item => {
+                const queryMatch = !query || getSearchText(item).includes(query);
+                return queryMatch;
+            });
+
+            const visibleIds = new Set(state.visibleItems.map(item => item.id));
+
+            cards.forEach(card => {
+                const visible = visibleIds.has(card.dataset.id);
+                card.classList.toggle("is-hidden", !visible);
+                if (visible) {
+                    visibleCount += 1;
+                }
+            });
+
+            resultCount.textContent = String(visibleCount);
+            emptyState.classList.toggle("is-visible", visibleCount === 0);
+            renderSearchResults();
+        }
+
+        /* =========================================================
+           06. 搜索
+           ========================================================= */
+        function getSearchMatches() {
+            const query = normalize(state.query);
+            if (!query) {
+                return [...GALLERY_CONFIG];
+            }
+            return GALLERY_CONFIG.filter(item => getSearchText(item).includes(query));
+        }
+
+        function renderSearchResults() {
+            const matches = getSearchMatches();
+            searchPanelCount.textContent = state.query
+                ? `${matches.length} 项`
+                : `共 ${GALLERY_CONFIG.length}`;
+
+            if (matches.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="search-empty">
+                        <div class="search-empty-icon" aria-hidden="true"></div>
+                        <strong>无</strong>
+                        <span>换关键词</span>
+                    </div>
+                `;
+                return;
+            }
+
+            searchResults.innerHTML = matches.map(item => {
+                const itemIndex = getItemIndex(item);
+                return `
+                    <button class="search-result-item focus-ring" type="button" data-search-id="${escapeHTML(item.id)}">
+                        <span class="search-result-thumb">
+                            ${createSearchThumb(item)}
+                        </span>
+                        <span class="search-result-copy">
+                            <span class="search-result-title">${escapeHTML(item.title || `作品 ${padNumber(itemIndex + 1)}`)}</span>
+                            <span class="search-result-meta">—</span>
+                        </span>
+                        <svg class="search-result-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path d="M5 12h14M14 7l5 5-5 5"></path>
+                        </svg>
+                    </button>
+                `;
+            }).join("");
+
+            searchResults.querySelectorAll("[data-search-id]").forEach(button => {
+                button.addEventListener("click", () => {
+                    const item = GALLERY_CONFIG.find(entry => entry.id === button.dataset.searchId);
+                    if (!item) return;
+
+                    applyFilters();
+                    closeSearchPanel();
+
+                    const card = galleryGrid.querySelector(`[data-id="${CSS.escape(item.id)}"]`);
+                    if (card) {
+                        card.scrollIntoView({ behavior: "smooth", block: "center" });
+                        card.animate(
+                            [
+                                { transform: "translateY(0) scale(.985)" },
+                                { transform: "translateY(-5px) scale(1.012)" },
+                                { transform: "translateY(0) scale(1)" }
+                            ],
+                            { duration: 850, easing: "cubic-bezier(.16,1,.3,1)" }
+                        );
+                    }
+                });
+            });
+        }
+
+        function openSearchPanel() {
+            searchPanel.classList.add("is-open");
+            renderSearchResults();
+        }
+
+        function closeSearchPanel() {
+            searchPanel.classList.remove("is-open");
+        }
+
+        function focusSearch() {
+            searchBox.classList.add("is-active");
+            searchInput.focus();
+            searchInput.select();
+            openSearchPanel();
+        }
+
+        function blurSearch() {
+            if (window.matchMedia("(max-width: 720px)").matches && !state.query) {
+                searchBox.classList.remove("is-active");
+            }
+        }
+
+        function clearSearch() {
+            searchInput.value = "";
+            state.query = "";
+            searchClear.classList.remove("is-visible");
+            searchShortcut.hidden = false;
+            applyFilters();
+            if (window.matchMedia("(max-width: 720px)").matches) {
+                searchBox.classList.remove("is-active");
+                searchInput.blur();
+            }
+        }
+
+        searchInput.addEventListener("input", () => {
+            state.query = searchInput.value;
+            searchClear.classList.toggle("is-visible", Boolean(searchInput.value));
+            searchShortcut.hidden = Boolean(searchInput.value);
+            openSearchPanel();
+            applyFilters();
+        });
+
+        searchInput.addEventListener("focus", () => {
+            searchBox.classList.add("is-active");
+            openSearchPanel();
+        });
+
+        searchInput.addEventListener("blur", blurSearch);
+
+        searchInput.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                if (state.query) {
+                    clearSearch();
+                } else {
+                    closeSearchPanel();
+                    searchInput.blur();
+                }
+            }
+
+            if (event.key === "Enter") {
+                const firstMatch = getSearchMatches()[0];
+                if (firstMatch) {
+                    const resultButton = searchResults.querySelector(`[data-search-id="${CSS.escape(firstMatch.id)}"]`);
+                    resultButton?.click();
+                }
+            }
+        });
+
+        searchClear.addEventListener("click", () => {
+            clearSearch();
+            focusSearch();
+        });
+
+        heroSearchButton.addEventListener("click", focusSearch);
+
+        searchBox.addEventListener("click", event => {
+            if (window.matchMedia("(max-width: 720px)").matches && !searchBox.classList.contains("is-active")) {
+                event.preventDefault();
+                focusSearch();
+            }
+        });
+
+        document.addEventListener("click", event => {
+            if (!searchBox.contains(event.target)) {
+                closeSearchPanel();
+                if (window.matchMedia("(max-width: 720px)").matches && !state.query) {
+                    searchBox.classList.remove("is-active");
+                }
+            }
+        });
+
+        document.addEventListener("keydown", event => {
+            const isShortcut = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k";
+            const slashShortcut = event.key === "/" && document.activeElement?.tagName !== "INPUT";
+
+            if (isShortcut || slashShortcut) {
+                event.preventDefault();
+                focusSearch();
+            }
+        });
+
+        /* =========================================================
+           07. 媒体管理器
+           ========================================================= */
+        function openMediaManager() {
+            state.lastFocusedElement = document.activeElement;
+            mediaManager.classList.add("is-open");
+            mediaManager.setAttribute("aria-hidden", "false");
+            body.classList.add("is-locked");
+            state.selectedPhotos = [];
+            updateConfirmButton();
+            loadPhotosFromFolder();
+        }
+
+        function closeMediaManager() {
+            mediaManager.classList.remove("is-open");
+            mediaManager.setAttribute("aria-hidden", "true");
+            body.classList.remove("is-locked");
+            state.lastFocusedElement?.focus?.({ preventScroll: true });
+            state.selectedPhotos = [];
+            updateConfirmButton();
+        }
+
+        function updateConfirmButton() {
+            mediaManagerConfirm.disabled = state.selectedPhotos.length === 0;
+        }
+
+        function loadPhotosFromFolder() {
+            const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+            const photoFiles = [];
+
+            fetch("photos/")
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+                    const links = doc.querySelectorAll("a");
+
+                    links.forEach(link => {
+                        const href = link.getAttribute("href");
+                        if (href && !href.startsWith("..") && !href.startsWith("/")) {
+                            const ext = href.split(".").pop()?.toLowerCase();
+                            if (imageExtensions.includes(ext)) {
+                                photoFiles.push(href);
+                            }
+                        }
+                    });
+
+                    renderPhotosGrid(photoFiles);
+                })
+                .catch(() => {
+                    photosGrid.innerHTML = `
+                        <div style="text-align: center; padding: 28px; color: var(--muted-dark); font-size: 9px;">
+                            <p>无法访问 photos 文件夹</p>
+                            <p style="margin-top: 8px;">请确保服务器已启动或图片已放置在 photos 目录中</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function renderPhotosGrid(files) {
+            if (files.length === 0) {
+                photosGrid.innerHTML = `
+                    <div style="text-align: center; padding: 28px; color: var(--muted-dark); font-size: 9px;">
+                        <p>photos 文件夹中暂无图片</p>
+                        <p style="margin-top: 8px;">请先将图片放入 photos 文件夹</p>
+                    </div>
+                `;
+                return;
+            }
+
+            photosGrid.innerHTML = files.map(file => {
+                const isSelected = state.selectedPhotos.includes(file);
+                return `
+                    <div
+                        class="photo-item ${isSelected ? "is-selected" : ""}"
+                        data-photo-path="${escapeHTML(file)}"
+                    >
+                        <img src="${escapeHTML("photos/" + file)}" alt="${escapeHTML(file)}" loading="lazy">
+                        <div class="photo-item-info">
+                            <span class="photo-item-name">${escapeHTML(file)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            photosGrid.querySelectorAll(".photo-item").forEach(item => {
+                item.addEventListener("click", () => {
+                    const path = item.dataset.photoPath;
+                    const index = state.selectedPhotos.indexOf(path);
+
+                    if (index > -1) {
+                        state.selectedPhotos.splice(index, 1);
+                        item.classList.remove("is-selected");
+                    } else {
+                        state.selectedPhotos.push(path);
+                        item.classList.add("is-selected");
+                    }
+
+                    updateConfirmButton();
+                });
+            });
+        }
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files || []);
+            const imageFiles = files.filter(file => file.type.startsWith("image/"));
+
+            if (imageFiles.length === 0) {
+                showToast("未选择图片文件");
+                return;
+            }
+
+            imageFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const dataUrl = e.target.result;
+                    const fileName = file.name;
+                    const newItem = {
+                        id: `work_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        src: dataUrl,
+                        title: fileName.replace(/\.[^/.]+$/, ""),
+                        aspectRatio: "1/1"
+                    };
+
+                    GALLERY_CONFIG.push(newItem);
+                    state.selectedPhotos.push(fileName);
+                    updateConfirmButton();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            showToast(`已选择 ${imageFiles.length} 张图片`);
+            fileInput.value = "";
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            uploadArea.classList.add("is-dragover");
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            uploadArea.classList.remove("is-dragover");
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            uploadArea.classList.remove("is-dragover");
+
+            const files = Array.from(event.dataTransfer.files || []);
+            const imageFiles = files.filter(file => file.type.startsWith("image/"));
+
+            if (imageFiles.length === 0) {
+                showToast("未选择图片文件");
+                return;
+            }
+
+            imageFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const dataUrl = e.target.result;
+                    const fileName = file.name;
+                    const newItem = {
+                        id: `work_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        src: dataUrl,
+                        title: fileName.replace(/\.[^/.]+$/, ""),
+                        aspectRatio: "1/1"
+                    };
+
+                    GALLERY_CONFIG.push(newItem);
+                    state.selectedPhotos.push(fileName);
+                    updateConfirmButton();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            showToast(`已拖放 ${imageFiles.length} 张图片`);
+        }
+
+        function confirmAddPhotos() {
+            state.selectedPhotos.forEach(path => {
+                const existingItem = GALLERY_CONFIG.find(item => item.src === path || item.src === "photos/" + path);
+                if (!existingItem) {
+                    const isDataUrl = path.startsWith("data:");
+                    const newItem = {
+                        id: `work_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        src: isDataUrl ? path : "photos/" + path,
+                        title: isDataUrl ? "新作品" : path.replace(/\.[^/.]+$/, ""),
+                        aspectRatio: "1/1"
+                    };
+
+                    GALLERY_CONFIG.push(newItem);
+                }
+            });
+
+            closeMediaManager();
+            renderGallery();
+            showToast(`已添加 ${state.selectedPhotos.length} 件作品`);
+        }
+
+        addButton.addEventListener("click", openMediaManager);
+        mediaManagerClose.addEventListener("click", closeMediaManager);
+        mediaManagerCancel.addEventListener("click", closeMediaManager);
+        mediaManagerConfirm.addEventListener("click", confirmAddPhotos);
+        fileInput.addEventListener("change", handleFileSelect);
+        uploadArea.addEventListener("dragover", handleDragOver);
+        uploadArea.addEventListener("dragleave", handleDragLeave);
+        uploadArea.addEventListener("drop", handleDrop);
+
+        mediaManager.addEventListener("click", event => {
+            if (event.target === mediaManager) {
+                closeMediaManager();
+            }
+        });
+
+        document.addEventListener("keydown", event => {
+            if (!mediaManager.classList.contains("is-open")) return;
+
+            if (event.key === "Escape") {
+                closeMediaManager();
+            }
+
+            if (event.key === "Enter" && !mediaManagerConfirm.disabled) {
+                confirmAddPhotos();
+            }
+        });
+
+        /* =========================================================
+           07. 大图预览
+           ========================================================= */
+        function renderCollectionThumbs(item) {
+            const group = collectionMap[item.collectionId] || [];
+            collectionList.hidden = group.length <= 1;
+
+            if (group.length <= 1) {
+                collectionThumbs.innerHTML = "";
+                return;
+            }
+
+            collectionThumbs.innerHTML = group.map(groupItem => `
+                <button
+                    class="collection-thumb ${groupItem.id === item.id ? "is-active" : ""}"
+                    type="button"
+                    data-thumb-id="${escapeHTML(groupItem.id)}"
+                    aria-label="${escapeHTML(groupItem.title || "作品")}"
+                >
+                    ${createSearchThumb(groupItem)}
+                </button>
+            `).join("");
+
+            collectionThumbs.querySelectorAll("[data-thumb-id]").forEach(button => {
+                button.addEventListener("click", () => {
+                    const nextItem = GALLERY_CONFIG.find(entry => entry.id === button.dataset.thumbId);
+                    if (nextItem) {
+                        updateLightbox(nextItem, 1);
+                    }
+                });
+            });
+        }
+
+        function updateLightbox(item, direction = 0) {
+            const index = getItemIndex(item);
+            state.currentIndex = Math.max(0, index);
+
+            lightboxMediaWrap.style.opacity = "0";
+            lightboxMediaWrap.style.transform = `translateX(${direction * 18}px) scale(.992)`;
+
+            window.setTimeout(() => {
+                if (item.src) {
+                    lightboxImage.src = item.src;
+                    lightboxImage.alt = item.title || "作品";
+                    lightboxImage.hidden = false;
+                    lightboxPlaceholder.hidden = true;
+                } else {
+                    lightboxImage.hidden = true;
+                    lightboxImage.removeAttribute("src");
+                    lightboxPlaceholder.hidden = false;
+                    lightboxPlaceholder.style.cssText = getPaletteStyle(item);
+                }
+
+                lightboxCollection.textContent = item.collectionName || "";
+                lightboxTitle.textContent = item.title || "";
+                lightboxModel.textContent = item.model || "";
+                lightboxDescription.textContent = item.description || "";
+                lightboxMetaSeries.textContent = item.collectionName || "";
+                lightboxMetaModel.textContent = item.model || "";
+                lightboxMetaIndex.textContent = padNumber(index + 1);
+                lightboxPosition.textContent = `${padNumber(index + 1)} / ${padNumber(GALLERY_CONFIG.length)}`;
+
+                renderCollectionThumbs(item);
+                applyLightboxAspect(item);
+
+                requestAnimationFrame(() => {
+                    lightboxMediaWrap.style.opacity = "1";
+                    lightboxMediaWrap.style.transform = "translateX(0) scale(1)";
+                });
+            }, 160);
+        }
+
+        function applyLightboxAspect(item) {
+            if (!item.src) {
+                lightboxMediaWrap.style.removeProperty("--lightbox-aspect");
+                return;
+            }
+            detectImageAspect(item.src).then(ratio => {
+                if (ratio) {
+                    lightboxMediaWrap.style.setProperty("--lightbox-aspect", ratio);
+                }
+            });
+        }
+
+        function openLightbox(item) {
+            state.lastFocusedElement = document.activeElement;
+            updateLightbox(item, 0);
+            lightbox.classList.add("is-open");
+            lightbox.setAttribute("aria-hidden", "false");
+            body.classList.add("is-locked");
+            lightboxClose.focus({ preventScroll: true });
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove("is-open");
+            lightbox.setAttribute("aria-hidden", "true");
+            body.classList.remove("is-locked");
+            state.lastFocusedElement?.focus?.({ preventScroll: true });
+        }
+
+        function moveLightbox(step) {
+            const nextIndex = (state.currentIndex + step + GALLERY_CONFIG.length) % GALLERY_CONFIG.length;
+            updateLightbox(GALLERY_CONFIG[nextIndex], step);
+        }
+
+        lightboxClose.addEventListener("click", closeLightbox);
+        lightboxPrev.addEventListener("click", () => moveLightbox(-1));
+        lightboxNext.addEventListener("click", () => moveLightbox(1));
+
+        lightbox.addEventListener("click", event => {
+            if (event.target === lightbox || event.target.id === "lightbox-stage") {
+                closeLightbox();
+            }
+        });
+
+        document.addEventListener("keydown", event => {
+            if (!lightbox.classList.contains("is-open")) return;
+
+            if (event.key === "Escape") {
+                closeLightbox();
+            }
+
+            if (event.key === "ArrowLeft") {
+                moveLightbox(-1);
+            }
+
+            if (event.key === "ArrowRight") {
+                moveLightbox(1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        lightbox.addEventListener("touchstart", event => {
+            const touch = event.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        }, { passive: true });
+
+        lightbox.addEventListener("touchend", event => {
+            const touch = event.changedTouches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+
+            if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                moveLightbox(deltaX > 0 ? -1 : 1);
+            }
+        }, { passive: true });
+
+        /* =========================================================
+           08. 动画与页面行为
+           ========================================================= */
+        function observeWorkCards() {
+            const cards = galleryGrid.querySelectorAll(".work-card");
+
+            if (!("IntersectionObserver" in window)) {
+                cards.forEach(card => card.classList.add("is-visible"));
+                return;
+            }
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const card = entry.target;
+                        const visibleIndex = [...cards].indexOf(card);
+                        window.setTimeout(() => {
+                            card.classList.add("is-visible");
+                        }, Math.min(visibleIndex % 4, 3) * 90);
+                        observer.unobserve(card);
+                    }
+                });
+            }, {
+                threshold: 0.08,
+                rootMargin: "0px 0px -5% 0px"
+            });
+
+            cards.forEach(card => observer.observe(card));
+        }
+
+        function observeRevealElements() {
+            const items = document.querySelectorAll(".reveal-on-scroll");
+
+            if (!("IntersectionObserver" in window)) {
+                items.forEach(item => item.style.opacity = "1");
+                return;
+            }
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.animate(
+                            [
+                                { opacity: 0, transform: "translateY(24px)" },
+                                { opacity: 1, transform: "translateY(0)" }
+                            ],
+                            {
+                                duration: 900,
+                                easing: "cubic-bezier(.16,1,.3,1)",
+                                fill: "forwards"
+                            }
+                        );
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12 });
+
+            items.forEach(item => {
+                item.style.opacity = "0";
+                observer.observe(item);
+            });
+        }
+
+        function playHeroIntro() {
+            const items = document.querySelectorAll(".reveal-item");
+            items.forEach((item, index) => {
+                item.animate(
+                    [
+                        { opacity: 0, transform: "translateY(26px)" },
+                        { opacity: 1, transform: "translateY(0)" }
+                    ],
+                    {
+                        duration: 1050,
+                        delay: 120 + index * 120,
+                        easing: "cubic-bezier(.16,1,.3,1)",
+                        fill: "both"
+                    }
+                );
+            });
+        }
+
+        function handleScroll() {
+            const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+            const progress = (window.scrollY / maxScroll) * 100;
+            root.style.setProperty("--scroll-progress", `${progress}%`);
+            siteHeader.classList.toggle("is-scrolled", window.scrollY > 20);
+            backTop.classList.toggle("is-visible", window.scrollY > window.innerHeight * 0.75);
+        }
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+
+        window.addEventListener("mousemove", event => {
+            root.style.setProperty("--cursor-x", `${event.clientX}px`);
+            root.style.setProperty("--cursor-y", `${event.clientY}px`);
+        }, { passive: true });
+
+        backTop.addEventListener("click", () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        /* =========================================================
+           09. 初始化
+           ========================================================= */
+        function autoLoadPhotos() {
+            const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+
+            fetch("photos/")
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+                    const links = doc.querySelectorAll("a");
+                    const photoFiles = [];
+
+                    links.forEach(link => {
+                        const href = link.getAttribute("href");
+                        if (href && !href.startsWith("..") && !href.startsWith("/")) {
+                            const ext = href.split(".").pop()?.toLowerCase();
+                            if (imageExtensions.includes(ext)) {
+                                photoFiles.push(href);
+                            }
+                        }
+                    });
+
+                    photoFiles.forEach(file => {
+                        const newItem = {
+                            id: `work_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            src: "photos/" + file,
+                            title: file.replace(/\.[^/.]+$/, ""),
+                            aspectRatio: "1/1"
+                        };
+                        GALLERY_CONFIG.push(newItem);
+                    });
+
+                    if (photoFiles.length > 0) {
+                        renderGallery();
+                        renderSearchResults();
+                        showToast(`已自动加载 ${photoFiles.length} 张图片`);
+                    }
+                })
+                .catch(() => {
+                    if (!GALLERY_CONFIG.length) {
+                        showToast("请将图片放入 photos 文件夹或使用添加按钮上传");
+                    }
+                });
+        }
+
+        function init() {
+            renderGallery();
+            renderSearchResults();
+            playHeroIntro();
+            observeRevealElements();
+            handleScroll();
+            autoLoadPhotos();
+        }
+
+        init();
+    </script>
+</body>
+</html>
