@@ -1217,6 +1217,20 @@
             height: 14px;
         }
 
+        .work-card-notes {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: rgba(126, 112, 221, 0.72);
+            color: #fff;
+            font-size: 9px;
+            letter-spacing: 0.06em;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(126, 112, 221, 0.24);
+        }
+
         .empty-state {
             display: none;
             min-height: 320px;
@@ -1454,6 +1468,35 @@
             inset: 0;
             opacity: 0;
             cursor: pointer;
+        }
+
+        .notes-input-wrap {
+            position: relative;
+        }
+
+        #notes-input {
+            width: 100%;
+            height: 44px;
+            padding: 0 16px;
+            border: 1px solid rgba(69, 60, 91, 0.12);
+            border-radius: 12px;
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.76);
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            transition:
+                border-color 0.3s ease,
+                background 0.3s ease;
+        }
+
+        #notes-input::placeholder {
+            color: var(--muted-dark);
+        }
+
+        #notes-input:focus {
+            outline: 0;
+            border-color: rgba(126, 112, 221, 0.38);
+            background: rgba(255, 255, 255, 0.94);
         }
 
         .photos-grid {
@@ -2592,6 +2635,14 @@
             </div>
 
             <div class="media-section">
+                <div class="media-section-label">备注信息</div>
+                <div class="notes-input-wrap">
+                    <label class="sr-only" for="notes-input">备注</label>
+                    <input id="notes-input" type="text" placeholder="输入作品备注（将显示在缩略图右下角）" maxlength="50">
+                </div>
+            </div>
+
+            <div class="media-section">
                 <div class="media-section-label">photos 文件夹</div>
                 <div class="photos-grid" id="photos-grid"></div>
             </div>
@@ -2859,10 +2910,13 @@
         function createWorkCard(item, index) {
             const title = item.title || `作品 ${padNumber(index + 1)}`;
             const aspectRatio = item.aspectRatio || "1/1";
+            const notes = item.notes || "";
 
             const media = item.src
                 ? `<img class="work-image" src="${escapeHTML(item.src)}" alt="${escapeHTML(title)}" loading="lazy">`
                 : createPlaceholderMarkup(item);
+
+            const notesMarkup = notes ? `<span class="work-card-notes">${escapeHTML(notes)}</span>` : "";
 
             return `
                 <article
@@ -2883,6 +2937,7 @@
                                     </svg>
                                 </span>
                             </div>
+                            ${notesMarkup}
                         </div>
                     </div>
                 </article>
@@ -3304,6 +3359,9 @@
         }
 
         function confirmAddPhotos() {
+            const notesInput = document.getElementById("notes-input");
+            const notes = notesInput ? notesInput.value.trim() : "";
+
             state.selectedPhotos.forEach(path => {
                 const existingItem = GALLERY_CONFIG.find(item => item.src === path || item.src === "photos/" + path);
                 if (!existingItem) {
@@ -3312,6 +3370,7 @@
                         id: `work_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                         src: isDataUrl ? path : "photos/" + path,
                         title: isDataUrl ? "新作品" : path.replace(/\.[^/.]+$/, ""),
+                        notes: notes,
                         aspectRatio: "1/1"
                     };
 
