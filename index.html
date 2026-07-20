@@ -1231,6 +1231,35 @@
             box-shadow: 0 4px 12px rgba(126, 112, 221, 0.24);
         }
 
+        .work-card-delete {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 26px;
+            height: 26px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 50%;
+            background: rgba(204, 127, 145, 0.85);
+            color: #fff;
+            cursor: pointer;
+            transition:
+                opacity 0.25s ease,
+                transform 0.25s ease;
+            z-index: 10;
+        }
+
+        .work-card:hover .work-card-delete {
+            display: flex;
+        }
+
+        .work-card-delete:hover {
+            transform: scale(1.1);
+            background: rgba(204, 127, 145, 1);
+        }
+
         .empty-state {
             display: none;
             min-height: 320px;
@@ -2586,8 +2615,8 @@
             <div class="empty-state" id="empty-state">
                 <div>
                     <div class="empty-state-icon" aria-hidden="true"></div>
-                    <h3>无</h3>
-                    <p>换关键词。</p>
+                    <h3>暂无作品</h3>
+                    <p>点击右下角紫色按钮添加您的作品。</p>
                 </div>
             </div>
         </section>
@@ -2741,7 +2770,56 @@
               可后续在 GALLERY_CONFIG 中按需填写（默认都留空）
            5. 同一个 collectionId 的作品，会在大图预览中归为同一系列
            ========================================================= */
-        const GALLERY_CONFIG = [];
+        const GALLERY_CONFIG = [
+            {
+                id: "work_default_1",
+                src: "",
+                title: "晨光",
+                notes: "清晨",
+                aspectRatio: "3/4",
+                palette: { a: "#1a1a2e", b: "#16213e", c: "#0f3460", light: "rgba(255,226,175,.26)", x: "65%", y: "25%", angle: "135deg" }
+            },
+            {
+                id: "work_default_2",
+                src: "",
+                title: "暮色",
+                notes: "黄昏",
+                aspectRatio: "4/3",
+                palette: { a: "#2d1b4e", b: "#4a2c7a", c: "#6b3fa0", light: "rgba(255,182,193,.20)", x: "75%", y: "30%", angle: "120deg" }
+            },
+            {
+                id: "work_default_3",
+                src: "",
+                title: "静谧",
+                notes: "宁静",
+                aspectRatio: "1/1",
+                palette: { a: "#2c3e50", b: "#34495e", c: "#2980b9", light: "rgba(189,195,199,.25)", x: "55%", y: "40%", angle: "145deg" }
+            },
+            {
+                id: "work_default_4",
+                src: "",
+                title: "流光",
+                notes: "光影",
+                aspectRatio: "16/9",
+                palette: { a: "#1b2838", b: "#2a475e", c: "#66c0f4", light: "rgba(102,192,244,.30)", x: "70%", y: "35%", angle: "160deg" }
+            },
+            {
+                id: "work_default_5",
+                src: "",
+                title: "深邃",
+                notes: "夜色",
+                aspectRatio: "3/4",
+                palette: { a: "#0d0d0d", b: "#1a1a2e", c: "#16213e", light: "rgba(144,148,152,.15)", x: "60%", y: "50%", angle: "135deg" }
+            },
+            {
+                id: "work_default_6",
+                src: "",
+                title: "繁花",
+                notes: "春日",
+                aspectRatio: "1/1",
+                palette: { a: "#3d2914", b: "#5c4033", c: "#8b5a2b", light: "rgba(255,218,185,.25)", x: "75%", y: "25%", angle: "110deg" }
+            }
+        ];
 
         /* =========================================================
            02. DOM 引用与基础状态
@@ -2857,6 +2935,34 @@
             ].join(";");
         }
 
+        const STORAGE_KEY = "huishe_gallery_data";
+
+        function saveGalleryData() {
+            try {
+                const dataToSave = GALLERY_CONFIG.filter(item => !item.id.startsWith("work_default_"));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+            } catch (e) {
+                console.warn("无法保存到 localStorage:", e);
+            }
+        }
+
+        function loadGalleryData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const savedItems = JSON.parse(saved);
+                    savedItems.forEach(item => {
+                        const exists = GALLERY_CONFIG.some(existing => existing.id === item.id);
+                        if (!exists) {
+                            GALLERY_CONFIG.push(item);
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn("无法从 localStorage 加载:", e);
+            }
+        }
+
         function createPlaceholderMarkup(item) {
             return `
                 <div class="work-placeholder" style="${getPaletteStyle(item)}"></div>
@@ -2912,12 +3018,20 @@
             const title = item.title || `作品 ${padNumber(index + 1)}`;
             const aspectRatio = item.aspectRatio || "1/1";
             const notes = item.notes || "";
+            const isDefault = item.id.startsWith("work_default_");
 
             const media = item.src
                 ? `<img class="work-image" src="${escapeHTML(item.src)}" alt="${escapeHTML(title)}" loading="lazy">`
                 : createPlaceholderMarkup(item);
 
             const notesMarkup = notes ? `<span class="work-card-notes">${escapeHTML(notes)}</span>` : "";
+            const deleteMarkup = !isDefault ? `
+                <button class="work-card-delete" type="button" aria-label="删除 ${escapeHTML(title)}" data-delete-id="${escapeHTML(item.id)}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                        <path d="M6 6l12 12M18 6 6 18"></path>
+                    </svg>
+                </button>
+            ` : "";
 
             return `
                 <article
@@ -2939,6 +3053,7 @@
                                 </span>
                             </div>
                             ${notesMarkup}
+                            ${deleteMarkup}
                         </div>
                     </div>
                 </article>
@@ -2961,6 +3076,22 @@
                     if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         openCard();
+                    }
+                });
+            });
+
+            galleryGrid.querySelectorAll(".work-card-delete").forEach(deleteBtn => {
+                deleteBtn.addEventListener("click", event => {
+                    event.stopPropagation();
+                    const itemId = deleteBtn.dataset.deleteId;
+                    if (confirm("确定要删除这件作品吗？")) {
+                        const index = GALLERY_CONFIG.findIndex(item => item.id === itemId);
+                        if (index > -1) {
+                            GALLERY_CONFIG.splice(index, 1);
+                            saveGalleryData();
+                            renderGallery();
+                            showToast("已删除作品");
+                        }
                     }
                 });
             });
@@ -3379,6 +3510,7 @@
                 }
             });
 
+            saveGalleryData();
             closeMediaManager();
             renderGallery();
             showToast(`已添加 ${state.selectedPhotos.length} 件作品`);
@@ -3709,6 +3841,7 @@
         }
 
         function init() {
+            loadGalleryData();
             renderGallery();
             renderSearchResults();
             playHeroIntro();
