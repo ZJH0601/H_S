@@ -970,8 +970,6 @@
             height: 96px;
             border: 1px solid rgba(126, 112, 221, 0.30);
             border-radius: 50%;
-            display: grid;
-            place-items: center;
             background: rgba(255, 255, 255, 0.76);
             box-shadow: 0 18px 46px rgba(74, 63, 104, 0.12);
             animation: badgeRotate 20s linear infinite;
@@ -983,15 +981,6 @@
             content: "";
             border: 1px solid var(--line-soft);
             border-radius: 50%;
-        }
-
-        .featured-badge span {
-            max-width: 72px;
-            text-align: center;
-            color: #6f63c9;
-            font-size: 8px;
-            line-height: 1.8;
-            letter-spacing: 0.17em;
         }
 
         @keyframes badgeRotate {
@@ -1017,14 +1006,6 @@
             font-family: Georgia, "Times New Roman", serif;
             font-size: 15px;
             font-weight: 400;
-        }
-
-        .featured-caption span {
-            display: block;
-            margin-top: 5px;
-            color: var(--muted-dark);
-            font-size: 8px;
-            letter-spacing: .16em;
         }
 
         .hero-scroll {
@@ -2269,11 +2250,6 @@
                 height: 72px;
             }
 
-            .featured-badge span {
-                max-width: 44px;
-                font-size: 5.5px;
-            }
-
             .featured-lines span {
                 left: -8%;
                 width: 116%;
@@ -2535,12 +2511,9 @@
 
                 <div class="featured-caption">
                     <strong>光影</strong>
-                    <span>凝光 · 静水</span>
                 </div>
 
-                <div class="featured-badge">
-                    <span>绘摄<br>画面<br>空间</span>
-                </div>
+                <div class="featured-badge"></div>
             </div>
 
             <div class="hero-scroll" aria-hidden="true">向下</div>
