@@ -3288,7 +3288,6 @@
 
         function loadPhotosFromFolder() {
             const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
-            const photoFiles = [];
 
             fetch("photos/")
                 .then(response => response.text())
@@ -3297,49 +3296,64 @@
                     const doc = parser.parseFromString(html, "text/html");
                     const links = doc.querySelectorAll("a");
 
+                    folderPhotos = [];
                     links.forEach(link => {
                         const href = link.getAttribute("href");
                         if (href && !href.startsWith("..") && !href.startsWith("/")) {
                             const ext = href.split(".").pop()?.toLowerCase();
                             if (imageExtensions.includes(ext)) {
-                                photoFiles.push(href);
+                                folderPhotos.push(href);
                             }
                         }
                     });
 
-                    renderPhotosGrid(photoFiles);
+                    renderPhotosGrid([...getUploadedPhotos(), ...folderPhotos]);
                 })
                 .catch(() => {
-                    photosGrid.innerHTML = `
-                        <div style="text-align: center; padding: 28px; color: var(--muted-dark); font-size: 9px;">
-                            <p>无法访问 photos 文件夹</p>
-                            <p style="margin-top: 8px;">请确保服务器已启动或图片已放置在 photos 目录中</p>
-                        </div>
-                    `;
+                    folderPhotos = [];
+                    renderPhotosGrid([...getUploadedPhotos(), ...folderPhotos]);
                 });
         }
 
-        function renderPhotosGrid(files) {
-            if (files.length === 0) {
+        let folderPhotos = [];
+
+        function getUploadedPhotos() {
+            return state.selectedPhotos.filter(path => path.startsWith("data:"));
+        }
+
+        function getFolderPhotos() {
+            return folderPhotos;
+        }
+
+        function renderPhotosGrid(allFiles) {
+            const uploaded = getUploadedPhotos();
+            const folder = getFolderPhotos();
+            
+            if (uploaded.length === 0 && folder.length === 0) {
                 photosGrid.innerHTML = `
                     <div style="text-align: center; padding: 28px; color: var(--muted-dark); font-size: 9px;">
-                        <p>photos 文件夹中暂无图片</p>
-                        <p style="margin-top: 8px;">请先将图片放入 photos 文件夹</p>
+                        <p>暂无图片</p>
+                        <p style="margin-top: 8px;">请通过上方上传区域添加图片</p>
                     </div>
                 `;
                 return;
             }
 
-            photosGrid.innerHTML = files.map(file => {
+            photosGrid.innerHTML = allFiles.map(file => {
+                const isDataUrl = file.startsWith("data:");
                 const isSelected = state.selectedPhotos.includes(file);
+                const fileName = isDataUrl ? "上传图片" : file;
+                const src = isDataUrl ? file : "photos/" + file;
+                
                 return `
                     <div
                         class="photo-item ${isSelected ? "is-selected" : ""}"
                         data-photo-path="${escapeHTML(file)}"
+                        data-is-dataurl="${isDataUrl}"
                     >
-                        <img src="${escapeHTML("photos/" + file)}" alt="${escapeHTML(file)}" loading="lazy">
+                        <img src="${escapeHTML(src)}" alt="${escapeHTML(fileName)}" loading="lazy">
                         <div class="photo-item-info">
-                            <span class="photo-item-name">${escapeHTML(file)}</span>
+                            <span class="photo-item-name">${escapeHTML(fileName)}</span>
                         </div>
                     </div>
                 `;
@@ -3377,15 +3391,18 @@
                 reader.onload = e => {
                     const dataUrl = e.target.result;
                     const fileName = file.name;
+                    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    
                     const newItem = {
-                        id: `work_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        id: tempId,
                         src: dataUrl,
                         title: fileName.replace(/\.[^/.]+$/, ""),
-                        aspectRatio: "1/1"
+                        aspectRatio: "1/1",
+                        isUploaded: true
                     };
 
-                    GALLERY_CONFIG.push(newItem);
-                    state.selectedPhotos.push(fileName);
+                    state.selectedPhotos.push(dataUrl);
+                    renderPhotosGrid([...getUploadedPhotos(), ...getFolderPhotos()]);
                     updateConfirmButton();
                 };
                 reader.readAsDataURL(file);
@@ -3422,15 +3439,18 @@
                 reader.onload = e => {
                     const dataUrl = e.target.result;
                     const fileName = file.name;
+                    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    
                     const newItem = {
-                        id: `work_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        id: tempId,
                         src: dataUrl,
                         title: fileName.replace(/\.[^/.]+$/, ""),
-                        aspectRatio: "1/1"
+                        aspectRatio: "1/1",
+                        isUploaded: true
                     };
 
-                    GALLERY_CONFIG.push(newItem);
-                    state.selectedPhotos.push(fileName);
+                    state.selectedPhotos.push(dataUrl);
+                    renderPhotosGrid([...getUploadedPhotos(), ...getFolderPhotos()]);
                     updateConfirmButton();
                 };
                 reader.readAsDataURL(file);
@@ -3442,6 +3462,7 @@
         function confirmAddPhotos() {
             const notesInput = document.getElementById("notes-input");
             const notes = notesInput ? notesInput.value.trim() : "";
+            let addedCount = 0;
 
             state.selectedPhotos.forEach(path => {
                 const existingItem = GALLERY_CONFIG.find(item => item.src === path || item.src === "photos/" + path);
@@ -3456,13 +3477,14 @@
                     };
 
                     GALLERY_CONFIG.push(newItem);
+                    addedCount++;
                 }
             });
 
             saveGalleryData();
             closeMediaManager();
             renderGallery();
-            showToast(`已添加 ${state.selectedPhotos.length} 件作品`);
+            showToast(`已添加 ${addedCount} 件作品`);
         }
 
         addButton.addEventListener("click", openMediaManager);
