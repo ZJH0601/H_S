@@ -467,7 +467,7 @@
 
         .search-shortcut {
             position: absolute;
-            right: 12px;
+            right: 14px;
             top: 50%;
             padding: 4px 7px;
             transform: translateY(-50%);
@@ -479,11 +479,12 @@
             line-height: 1;
             letter-spacing: 0.08em;
             pointer-events: none;
+            transition: opacity 0.25s ease;
         }
 
         .search-clear {
             position: absolute;
-            right: 12px;
+            right: 14px;
             top: 50%;
             display: none;
             width: 24px;
@@ -495,6 +496,12 @@
             cursor: pointer;
             color: #756e82;
             background: rgba(116, 105, 153, 0.09);
+            transition: background 0.25s ease, transform 0.25s ease;
+        }
+
+        .search-clear:hover {
+            background: rgba(116, 105, 153, 0.18);
+            transform: translateY(-50%) scale(1.1);
         }
 
         .search-clear.is-visible {
@@ -504,18 +511,20 @@
 
         .search-panel {
             position: absolute;
-            top: calc(100% + 12px);
+            top: calc(100% + 14px);
             right: 0;
-            width: min(380px, calc(100vw - 32px));
-            padding: 12px;
+            width: min(400px, calc(100vw - 32px));
+            padding: 14px;
             border: 1px solid rgba(72, 62, 98, 0.10);
-            border-radius: 18px;
+            border-radius: 20px;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-8px) scale(0.985);
             transform-origin: top right;
-            background: rgba(255, 255, 255, 0.96);
-            box-shadow: 0 30px 90px rgba(66, 54, 96, 0.16);
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 20px 60px rgba(66, 54, 96, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             transition:
                 opacity 0.25s ease,
                 visibility 0.25s ease,
@@ -559,47 +568,46 @@
 
         .search-result-item {
             display: grid;
-            grid-template-columns: 54px minmax(0, 1fr) auto;
+            grid-template-columns: 56px minmax(0, 1fr) auto;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             width: 100%;
-            min-height: 64px;
-            padding: 5px 8px;
+            min-height: 68px;
+            padding: 8px 10px;
             border: 0;
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
             text-align: left;
             background: transparent;
-            transition: background 0.25s ease, transform 0.3s var(--ease-out);
+            transition: background 0.25s ease, transform 0.25s ease;
         }
 
         .search-result-item:hover,
         .search-result-item:focus-visible {
             outline: 0;
-            background: rgba(126, 112, 221, 0.075);
-            transform: translateX(2px);
+            background: rgba(126, 112, 221, 0.08);
+            transform: translateX(4px);
         }
 
         .search-result-thumb {
             position: relative;
-            width: 54px;
+            width: 56px;
             aspect-ratio: 4 / 3;
             overflow: hidden;
-            border-radius: 8px;
-            background: #e8e6ef;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #e8e6ef 0%, #f5f3f9 100%);
+            box-shadow: 0 2px 8px rgba(66, 54, 96, 0.08);
         }
 
         .search-result-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
         }
 
-        .search-result-thumb::after {
-            position: absolute;
-            inset: 0;
-            content: "";
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+        .search-result-item:hover .search-result-thumb img {
+            transform: scale(1.05);
         }
 
         .search-result-copy {
@@ -608,19 +616,20 @@
 
         .search-result-title {
             overflow: hidden;
-            color: var(--text-soft);
-            font-size: 11px;
-            letter-spacing: 0.07em;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.05em;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
 
         .search-result-meta {
             overflow: hidden;
-            margin-top: 7px;
-            color: var(--muted-dark);
+            margin-top: 6px;
+            color: var(--muted);
             font-size: 9px;
-            letter-spacing: 0.09em;
+            letter-spacing: 0.08em;
             white-space: nowrap;
             text-overflow: ellipsis;
         }
@@ -3119,6 +3128,11 @@
 
             searchResults.innerHTML = matches.map(item => {
                 const itemIndex = getItemIndex(item);
+                const metaParts = [];
+                if (item.notes) metaParts.push(item.notes);
+                if (item.collectionName) metaParts.push(item.collectionName);
+                const metaText = metaParts.length > 0 ? metaParts.join(" · ") : "作品";
+                
                 return `
                     <button class="search-result-item focus-ring" type="button" data-search-id="${escapeHTML(item.id)}">
                         <span class="search-result-thumb">
@@ -3126,7 +3140,7 @@
                         </span>
                         <span class="search-result-copy">
                             <span class="search-result-title">${escapeHTML(item.title || `作品 ${padNumber(itemIndex + 1)}`)}</span>
-                            <span class="search-result-meta">—</span>
+                            <span class="search-result-meta">${escapeHTML(metaText)}</span>
                         </span>
                         <svg class="search-result-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                             <path d="M5 12h14M14 7l5 5-5 5"></path>
